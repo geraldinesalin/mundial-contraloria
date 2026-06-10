@@ -439,7 +439,7 @@ async function renderAdminApp() {
     card.appendChild(el('p', { style:{fontSize:'13px',color:'var(--muted)',marginBottom:'14px'} },
       'Muestra este QR a los participantes para que ingresen sus predicciones desde su celular.'));
 
-    const playerURL = window.location.href.split('?')[0] + '?mode=player';
+    const playerURL = 'https://geraldinesalin.github.io/mundial-contraloria/?mode=player';
 
     // QR via api.qrserver.com — genera imagen directamente sin librería
     const qrDiv = el('div', { id:'qr-container' });

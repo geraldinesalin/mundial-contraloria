@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concurso Mundialero Contraloría 2026</title>
+
+<style>
+  :root {
+    --navy: #4a0808;
+    --blue: #7f1d1d;
+    --bright: #b91c1c;
+    --gold: #f59e0b;
+    --gold-dark: #d97706;
+    --green: #16a34a;
+    --red: #dc2626;
+    --text: #3b0f0f;
+    --muted: #9b6b6b;
+    --border: #f0e0e0;
+    --bg-light: #fff8f8;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(160deg, #3b0000 0%, #7f1d1d 50%, #b91c1c 100%);
+    min-height: 100vh;
+    color: var(--text);
+  }
+  .wrap { max-width: 500px; margin: 0 auto; padding: 0 14px 40px; }
+
+  /* HEADER */
+  .header { text-align: center; padding: 28px 0 20px; }
+  .header .ball { font-size: 48px; line-height: 1; }
+  .header h1 { color: #fff; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin: 8px 0 4px; }
+  .header p { color: #fca5a5; font-size: 13px; }
+  .header .badge { display: inline-block; background: var(--gold); color: var(--navy); font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; margin-top: 8px; letter-spacing: 0.5px; }
+
+  /* CARD */
+  .card { background: var(--white); border-radius: 16px; padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 2px 16px rgba(13,27,75,0.12); }
+  .card h2 { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 14px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+  .tab { flex: 1; padding: 9px 4px; border: none; border-radius: 9px; background: transparent; color: rgba(255,255,255,0.6); font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .tab.active { background: var(--white); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+  /* BUTTONS */
+  .btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; transition: transform 0.1s, opacity 0.2s; }
+  .btn:active { transform: scale(0.98); }
+  .btn-gold { background: linear-gradient(90deg, var(--gold), var(--gold-dark)); color: var(--white); box-shadow: 0 4px 16px rgba(245,158,11,0.4); }
+  .btn-blue { background: var(--bright); color: var(--white); }
+  .btn-ghost { background: rgba(255,255,255,0.12); color: var(--white); border: 2px solid rgba(255,255,255,0.25); }
+  .btn-danger { background: var(--red); color: var(--white); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-sm { padding: 8px 16px; width: auto; font-size: 13px; border-radius: 8px; display: inline-block; }
+
+  /* INPUT */
+  .input { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 15px; font-family: inherit; color: var(--text); outline: none; transition: border-color 0.2s; }
+  .input:focus { border-color: var(--bright); }
+
+  /* MATCH CARD */
+  .match-row { background: var(--bg-light); border: 2px solid var(--border); border-radius: 12px; padding: 12px 12px; margin-bottom: 8px; }
+  .match-row.selected { background: #fff0f0; border-color: #fca5a5; }
+  .match-meta { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px; }
+  .match-teams { display: flex; align-items: center; gap: 8px; }
+  .team { flex: 1; }
+  .team.right { text-align: right; }
+  .team-flag { font-size: 24px; }
+  .team-name { font-size: 12px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .score-box { display: flex; align-items: center; gap: 6px; }
+  .score-input { width: 44px; height: 40px; text-align: center; font-size: 20px; font-weight: 800; border: 2px solid var(--bright); border-radius: 8px; color: var(--text); font-family: inherit; outline: none; }
+  .score-input:disabled { background: #f1f5f9; border-color: var(--border); color: var(--muted); }
+  .score-sep { color: var(--muted); font-weight: 900; font-size: 16px; }
+
+  /* POINTS BADGE */
+  .pts-badge { font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+  .pts-exact { background: var(--green); color: #fff; }
+  .pts-result { background: var(--gold-dark); color: #fff; }
+  .pts-zero { background: #e5e7eb; color: #9ca3af; }
+
+  /* RANKING */
+  .rank-row { display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-radius: 10px; margin-bottom: 6px; background: var(--bg-light); border: 2px solid var(--border); }
+  .rank-row.first { background: #fffbeb; border-color: var(--gold); }
+  .rank-medal { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; background: #e5e7eb; flex-shrink: 0; }
+  .rank-name { flex: 1; font-weight: 700; font-size: 15px; color: var(--text); }
+  .rank-pts { font-weight: 900; font-size: 20px; color: var(--text); }
+  .rank-pts span { font-size: 11px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+
+  /* PLAYER LIST */
+  .player-chip { display: inline-flex; align-items: center; gap: 6px; background: #fff0f0; border: 1.5px solid #fca5a5; border-radius: 20px; padding: 4px 12px; margin: 3px; font-size: 13px; font-weight: 600; color: var(--text); }
+  .player-chip.done { background: #f0fdf4; border-color: #86efac; }
+
+  /* QR */
+  #qr-container { display: flex; justify-content: center; padding: 8px 0 12px; }
+  #qr-container canvas, #qr-container img { border-radius: 12px; border: 4px solid var(--border); }
+
+  /* STATUS PILL */
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .status-open { background: #f0fdf4; color: var(--green); border: 1.5px solid #86efac; }
+  .status-closed { background: #fef2f2; color: var(--red); border: 1.5px solid #fca5a5; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-open { background: var(--green); }
+  .dot-closed { background: var(--red); }
+
+  /* PLAYER LOGIN */
+  .login-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px; }
+  .login-card { background: var(--white); border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 4px 32px rgba(13,27,75,0.2); }
+  .login-card h2 { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+  .login-card p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+
+  /* PROGRESS BAR */
+  .prog-track { background: rgba(255,255,255,0.12); border-radius: 6px; height: 6px; margin-bottom: 18px; }
+  .prog-fill { background: var(--gold); height: 100%; border-radius: 6px; transition: width 0.3s; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 700; z-index: 1000; pointer-events: none; transition: opacity 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .toast.hidden { opacity: 0; }
+
+  /* GROUP FILTER */
+  .group-filter { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
+  .gchip { padding: 4px 12px; border-radius: 16px; border: 2px solid; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .gchip.on { background: var(--bright); border-color: var(--bright); color: #fff; }
+  .gchip.off { background: transparent; border-color: var(--border); color: var(--muted); }
+
+  /* LOADING */
+  .loading { text-align: center; color: rgba(255,255,255,0.7); padding: 40px; font-size: 15px; }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SUBMITTED VIEW */
+  .submitted-banner { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 2px solid #86efac; border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 14px; }
+  .submitted-banner h3 { color: var(--green); font-size: 18px; margin-bottom: 4px; }
+  .submitted-banner p { color: #166534; font-size: 13px; }
+
+  /* SECTION DIVIDER */
+  .section-label { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: 1.5px; margin: 14px 0 8px; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const MATCHES = [
+  { id:1,  group:"A", home:"México",       away:"Sudáfrica",       date:"11 Jun", f1:"🇲🇽", f2:"🇿🇦" },
+  { id:2,  group:"A", home:"Corea del Sur",away:"Chequia",         date:"11 Jun", f1:"🇰🇷", f2:"🇨🇿" },
+  { id:3,  group:"A", home:"México",       away:"Corea del Sur",   date:"15 Jun", f1:"🇲🇽", f2:"🇰🇷" },
+  { id:4,  group:"A", home:"Chequia",      away:"Sudáfrica",       date:"15 Jun", f1:"🇨🇿", f2:"🇿🇦" },
+  { id:5,  group:"A", home:"Chequia",      away:"México",          date:"19 Jun", f1:"🇨🇿", f2:"🇲🇽" },
+  { id:6,  group:"A", home:"Sudáfrica",    away:"Corea del Sur",   date:"19 Jun", f1:"🇿🇦", f2:"🇰🇷" },
+  { id:7,  group:"B", home:"Canadá",       away:"Bosnia y Herz.",  date:"12 Jun", f1:"🇨🇦", f2:"🇧🇦" },
+  { id:8,  group:"B", home:"Qatar",        away:"Suiza",           date:"13 Jun", f1:"🇶🇦", f2:"🇨🇭" },
+  { id:9,  group:"B", home:"Canadá",       away:"Qatar",           date:"17 Jun", f1:"🇨🇦", f2:"🇶🇦" },
+  { id:10, group:"B", home:"Suiza",        away:"Bosnia y Herz.",  date:"17 Jun", f1:"🇨🇭", f2:"🇧🇦" },
+  { id:11, group:"C", home:"Brasil",       away:"Marruecos",       date:"13 Jun", f1:"🇧🇷", f2:"🇲🇦" },
+  { id:12, group:"C", home:"Haití",        away:"Escocia",         date:"13 Jun", f1:"🇭🇹", f2:"🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+  { id:13, group:"D", home:"EE.UU.",       away:"Paraguay",        date:"12 Jun", f1:"🇺🇸", f2:"🇵🇾" },
+  { id:14, group:"D", home:"Australia",    away:"Turquía",         date:"13 Jun", f1:"🇦🇺", f2:"🇹🇷" },
+  { id:15, group:"G", home:"Bélgica",      away:"Egipto",          date:"15 Jun", f1:"🇧🇪", f2:"🇪🇬" },
+  { id:16, group:"G", home:"Irán",         away:"Nueva Zelanda",   date:"15 Jun", f1:"🇮🇷", f2:"🇳🇿" },
+  { id:17, group:"H", home:"España",       away:"Cabo Verde",      date:"15 Jun", f1:"🇪🇸", f2:"🇨🇻" },
+  { id:18, group:"H", home:"Arabia Saudita",away:"Uruguay",        date:"15 Jun", f1:"🇸🇦", f2:"🇺🇾" },
+  { id:19, group:"I", home:"Francia",      away:"Senegal",         date:"16 Jun", f1:"🇫🇷", f2:"🇸🇳" },
+  { id:20, group:"I", home:"Irak",         away:"Noruega",         date:"16 Jun", f1:"🇮🇶", f2:"🇳🇴" },
+  { id:21, group:"J", home:"Argentina",    away:"Argelia",         date:"17 Jun", f1:"🇦🇷", f2:"🇩🇿" },
+  { id:22, group:"J", home:"Austria",      away:"Jordania",        date:"17 Jun", f1:"🇦🇹", f2:"🇯🇴" },
+  { id:23, group:"K", home:"Portugal",     away:"R.D. Congo",      date:"18 Jun", f1:"🇵🇹", f2:"🇨🇩" },
+  { id:24, group:"K", home:"Uzbekistán",   away:"Colombia",        date:"18 Jun", f1:"🇺🇿", f2:"🇨🇴" },
+  { id:25, group:"L", home:"Inglaterra",   away:"Croacia",         date:"18 Jun", f1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", f2:"🇭🇷" },
+  { id:26, group:"L", home:"Ghana",        away:"Panamá",          date:"18 Jun", f1:"🇬🇭", f2:"🇵🇦" },
+];
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 2800);
+}
+
+function getResult(h, a) { return h > a ? 'L' : a > h ? 'V' : 'E'; }
+
+function calcPoints(preds, actuals, matchIds) {
+  let total = 0;
+  matchIds.forEach(id => {
+    const p = preds[id], a = actuals[id];
+    if (!p || !a || p.home === '' || p.away === '' || a.home === '' || a.away === '') return;
+    if (typeof p.home !== 'number' || typeof a.home !== 'number') return;
+    if (p.home === a.home && p.away === a.away) total += 3;
+    else if (getResult(p.home, p.away) === getResult(a.home, a.away)) total += 1;
+  });
+  return total;
+}
+
+function isPlayerMode() {
+  try { return new URLSearchParams(window.location.search).get('mode') === 'player'; } catch(e) { return false; }
+}
+
+// ─── STORAGE HELPERS ─────────────────────────────────────────────────────────
+async function storageGet(key, shared=true) {
+  try { const r = await window.storage.get(key, shared); return r ? JSON.parse(r.value) : null; }
+  catch(e) { return null; }
+}
+async function storageSet(key, val, shared=true) {
+  try { await window.storage.set(key, JSON.stringify(val), shared); return true; }
+  catch(e) { return false; }
+}
+async function storageDelete(key, shared=true) {
+  try { await window.storage.delete(key, shared); } catch(e) {}
+}
+
+// ─── COMPONENT HELPERS ───────────────────────────────────────────────────────
+function el(tag, props={}, ...children) {
+  const e = document.createElement(tag);
+  Object.entries(props).forEach(([k, v]) => {
+    if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'class') e.className = v;
+    else e.setAttribute(k, v);
+  });
+  children.flat().forEach(c => {
+    if (c == null) return;
+    e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+
+// ─── SCORE INPUT ─────────────────────────────────────────────────────────────
+function makeScoreInput(val, onChange, disabled=false) {
+  const inp = el('input', { type:'number', min:'0', max:'20', class:'score-input',
+    value: val === '' ? '' : val });
+  if (disabled) inp.disabled = true;
+  inp.addEventListener('input', () => {
+    const v = inp.value === '' ? '' : Math.max(0, parseInt(inp.value)||0);
+    onChange(v);
+  });
+  return inp;
+}
+
+// ─── MATCH CARD ──────────────────────────────────────────────────────────────
+function makeMatchCard(match, pred, onPred, actual, onActual, showActualInput, readOnly) {
+  const row = el('div', { class: 'match-row' });
+
+  // meta
+  const metaRow = el('div', { style: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' } });
+  metaRow.appendChild(el('div', { class:'match-meta' }, `GRUPO ${match.group} · ${match.date}`));
+
+  // points badge
+  let pts = null;
+  if (actual && pred && typeof pred.home === 'number' && typeof actual.home === 'number') {
+    const ex = pred.home === actual.home && pred.away === actual.away;
+    const res = getResult(pred.home, pred.away) === getResult(actual.home, actual.away);
+    if (ex) pts = el('span', { class:'pts-badge pts-exact' }, '+3 Exacto ✓');
+    else if (res) pts = el('span', { class:'pts-badge pts-result' }, '+1 Resultado');
+    else pts = el('span', { class:'pts-badge pts-zero' }, '0 pts');
+  }
+  if (pts) metaRow.appendChild(pts);
+  row.appendChild(metaRow);
+
+  // teams + scores
+  const teams = el('div', { class:'match-teams' });
+
+  const teamL = el('div', { class:'team' });
+  teamL.appendChild(el('div', { class:'team-flag' }, match.f1));
+  teamL.appendChild(el('div', { class:'team-name' }, match.home));
+
+  const scoreBox = el('div', { class:'score-box' });
+  const inputH = makeScoreInput(pred?.home ?? '', v => onPred && onPred({ ...pred, home: typeof v === 'number' ? v : '' }), readOnly);
+  const inputA = makeScoreInput(pred?.away ?? '', v => onPred && onPred({ ...pred, away: typeof v === 'number' ? v : '' }), readOnly);
+  scoreBox.appendChild(inputH);
+  scoreBox.appendChild(el('span', { class:'score-sep' }, '–'));
+  scoreBox.appendChild(inputA);
+
+  const teamR = el('div', { class:'team right' });
+  teamR.appendChild(el('div', { class:'team-flag' }, match.f2));
+  teamR.appendChild(el('div', { class:'team-name' }, match.away));
+
+  teams.appendChild(teamL);
+  teams.appendChild(scoreBox);
+  teams.appendChild(teamR);
+  row.appendChild(teams);
+
+  // resultado real (solo admin)
+  if (showActualInput) {
+    const divider = el('div', { style:{ borderTop:'1px solid var(--border)', marginTop:'10px', paddingTop:'10px' } });
+    const lbl = el('div', { class:'section-label', style:{ textAlign:'center', marginBottom:'6px' } }, 'RESULTADO REAL');
+    const realBox = el('div', { class:'score-box', style:{ justifyContent:'center' } });
+    const rH = makeScoreInput(actual?.home ?? '', v => onActual && onActual({ ...actual, home: typeof v === 'number' ? v : '' }));
+    const rA = makeScoreInput(actual?.away ?? '', v => onActual && onActual({ ...actual, away: typeof v === 'number' ? v : '' }));
+    realBox.appendChild(rH);
+    realBox.appendChild(el('span', { class:'score-sep' }, '–'));
+    realBox.appendChild(rA);
+    divider.appendChild(lbl);
+    divider.appendChild(realBox);
+    row.appendChild(divider);
+  }
+
+  return row;
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+const root = document.getElementById('root');
+
+async function init() {
+  root.innerHTML = '<div class="loading"><span class="spin">⚽</span> Cargando…</div>';
+  if (isPlayerMode()) {
+    await renderPlayerApp();
+  } else {
+    await renderAdminApp();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADMIN APP
+// ═══════════════════════════════════════════════════════════════════════════════
+async function renderAdminApp() {
+  let config = await storageGet('config') || { matches: MATCHES.slice(0,10).map(m=>m.id), status:'open', actuals:{} };
+  let activeTab = 'setup';
+  let activeGroup = 'all';
+
+  async function saveConfig() {
+    await storageSet('config', config);
+  }
+
+  function render() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+
+    // header
+    const hdr = el('div', { class:'header' });
+    hdr.appendChild(el('div', { class:'ball' }, '⚽'));
+    hdr.appendChild(el('h1', {}, 'Concurso Mundialero Contraloría 2026'));
+    hdr.appendChild(el('p', {}, 'Panel de administración'));
+    const pill = el('span', { class: config.status==='open' ? 'status-pill status-open' : 'status-pill status-closed' });
+    pill.appendChild(el('span', { class: config.status==='open' ? 'dot dot-open' : 'dot dot-closed' }));
+    pill.appendChild(document.createTextNode(config.status==='open' ? ' Concurso abierto' : ' Concurso cerrado'));
+    hdr.appendChild(pill);
+    wrap.appendChild(hdr);
+
+    // tabs
+    const tabs = el('div', { class:'tabs' });
+    [['setup','⚙️ Config'],['qr','📱 QR'],['results','📋 Resultados'],['tabla','🏆 Tabla']].forEach(([id,label]) => {
+      const t = el('button', { class: activeTab===id ? 'tab active' : 'tab' }, label);
+      t.addEventListener('click', () => { activeTab=id; render(); });
+      tabs.appendChild(t);
+    });
+    wrap.appendChild(tabs);
+
+    if (activeTab === 'setup') renderSetup(wrap);
+    else if (activeTab === 'qr') renderQR(wrap);
+    else if (activeTab === 'results') renderResults(wrap);
+    else if (activeTab === 'tabla') renderTabla(wrap);
+
+    root.appendChild(wrap);
+  }
+
+  // ── SETUP TAB ──
+  function renderSetup(wrap) {
+    const card = el('div', { class:'card' });
+    card.appendChild(el('h2', {}, '🗓️ Seleccionar partidos'));
+
+    // group filter
+    const groups = ['all', ...new Set(MATCHES.map(m=>m.group)).values()].sort((a,b) => a==='all'?-1:a.localeCompare(b));
+    const gf = el('div', { class:'group-filter' });
+    groups.forEach(g => {
+      const btn = el('button', { class: activeGroup===g ? 'gchip on' : 'gchip off' }, g==='all'?'Todos':`G ${g}`);
+      btn.addEventListener('click', () => { activeGroup=g; render(); });
+      gf.appendChild(btn);
+    });
+    card.appendChild(gf);
+
+    const filtered = MATCHES.filter(m => activeGroup==='all' || m.group===activeGroup);
+    const listWrap = el('div', { style:{ maxHeight:'360px', overflowY:'auto' } });
+    filtered.forEach(match => {
+      const sel = config.matches.includes(match.id);
+      const row = el('div', { class: sel ? 'match-row selected' : 'match-row', style:{ cursor:'pointer' } });
+      const inner = el('div', { style:{ display:'flex', alignItems:'center', gap:'10px' } });
+      const chk = el('div', { style:{
+        width:'18px',height:'18px',borderRadius:'4px',border:'2px solid',flexShrink:'0',
+        borderColor: sel?'var(--bright)':'var(--border)',
+        background: sel?'var(--bright)':'transparent',
+        color:'#fff',fontSize:'11px',display:'flex',alignItems:'center',justifyContent:'center'
+      }}, sel?'✓':'');
+      inner.appendChild(chk);
+      inner.appendChild(el('span', { style:{fontSize:'13px'} }, `${match.f1} ${match.home} vs ${match.away} ${match.f2}`));
+      inner.appendChild(el('span', { style:{marginLeft:'auto',fontSize:'11px',color:'var(--muted)',whiteSpace:'nowrap'} }, `G${match.group} · ${match.date}`));
+      row.appendChild(inner);
+      row.addEventListener('click', () => {
+        if (sel) config.matches = config.matches.filter(x=>x!==match.id);
+        else config.matches.push(match.id);
+        saveConfig().then(render);
+      });
+      listWrap.appendChild(row);
+    });
+    card.appendChild(listWrap);
+    card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginTop:'10px'} },
+      `${config.matches.length} partidos seleccionados`));
+    wrap.appendChild(card);
+
+    // open/close toggle
+    const statusCard = el('div', { class:'card' });
+    statusCard.appendChild(el('h2', {}, '🔒 Estado del concurso'));
+    statusCard.appendChild(el('p', { style:{fontSize:'13px',color:'var(--muted)',marginBottom:'14px'} },
+      config.status==='open'
+        ? 'Los jugadores pueden ingresar predicciones.'
+        : 'No se aceptan nuevas predicciones.'));
+
+    const toggleBtn = el('button', {
+      class: config.status==='open' ? 'btn btn-danger' : 'btn btn-blue'
+    }, config.status==='open' ? '🔒 Cerrar concurso' : '🔓 Abrir concurso');
+    toggleBtn.addEventListener('click', async () => {
+      config.status = config.status==='open' ? 'closed' : 'open';
+      await saveConfig(); render();
+      showToast(config.status==='open' ? 'Concurso abierto ✓' : 'Concurso cerrado ✓');
+    });
+    statusCard.appendChild(toggleBtn);
+
+    // reset
+    const resetBtn = el('button', { class:'btn btn-ghost', style:{marginTop:'8px'} }, '🗑️ Borrar todas las predicciones');
+    resetBtn.addEventListener('click', async () => {
+      if (!confirm('¿Seguro? Esto borrará todas las predicciones de los jugadores.')) return;
+      const idx = await storageGet('players_index') || [];
+      for (const name of idx) await storageDelete('predictions:' + name);
+      await storageDelete('players_index');
+      showToast('Predicciones borradas');
+      render();
+    });
+    statusCard.appendChild(resetBtn);
+    wrap.appendChild(statusCard);
+  }
+
+  // ── QR TAB ──
+  function renderQR(wrap) {
+    const card = el('div', { class:'card' });
+    card.appendChild(el('h2', {}, '📱 Compartir con jugadores'));
+    card.appendChild(el('p', { style:{fontSize:'13px',color:'var(--muted)',marginBottom:'14px'} },
+      'Muestra este QR a los participantes para que ingresen sus predicciones desde su celular.'));
+
+    const playerURL = window.location.href.split('?')[0] + '?mode=player';
+
+    // QR via api.qrserver.com — genera imagen directamente sin librería
+    const qrDiv = el('div', { id:'qr-container' });
+    const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(playerURL)}&color=3b0000&bgcolor=ffffff&margin=10`;
+    const qrImg = el('img', { src: qrURL, width:'220', height:'220', alt:'QR Concurso', style:{ borderRadius:'12px', border:'4px solid var(--border)', display:'block' } });
+    qrImg.onerror = () => { qrDiv.textContent = '(No se pudo cargar el QR — copia el enlace abajo)'; };
+    qrDiv.appendChild(qrImg);
+    card.appendChild(qrDiv);
+
+    const urlBox = el('div', { style:{
+      background:'var(--bg-light)', border:'1.5px solid var(--border)',
+      borderRadius:'8px', padding:'10px 12px', fontSize:'11px', color:'var(--muted)',
+      wordBreak:'break-all', marginBottom:'12px', fontFamily:'monospace'
+    }}, playerURL);
+    card.appendChild(urlBox);
+
+    const copyBtn = el('button', { class:'btn btn-blue' }, '📋 Copiar enlace');
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(playerURL).then(() => showToast('Enlace copiado ✓'));
+    });
+    card.appendChild(copyBtn);
+    wrap.appendChild(card);
+
+    // jugadores que ya ingresaron
+    storageGet('players_index').then(idx => {
+      const list = idx || [];
+      if (list.length === 0) return;
+      const pc = el('div', { class:'card' });
+      pc.appendChild(el('h2', {}, `👥 Participantes (${list.length})`));
+      const chips = el('div', { style:{ lineHeight:'1' } });
+      list.forEach(n => chips.appendChild(el('span', { class:'player-chip done' }, `✓ ${n}`)));
+      pc.appendChild(chips);
+      wrap.appendChild(pc);
+    });
+
+  }
+
+
+  // ── RESULTS TAB ──
+  function renderResults(wrap) {
+    const card = el('div', { class:'card' });
+    card.appendChild(el('h2', {}, '📋 Ingresar resultados reales'));
+    card.appendChild(el('p', { style:{fontSize:'13px',color:'var(--muted)',marginBottom:'14px'} },
+      'Ingresa los marcadores a medida que terminen los partidos. Los puntos se calculan automáticamente.'));
+
+    config.matches.forEach(id => {
+      const match = MATCHES.find(m=>m.id===id);
+      if (!match) return;
+      const actual = config.actuals[id] || { home:'', away:'' };
+      const mcard = makeMatchCard(match, null, null, actual, async (val) => {
+        config.actuals[id] = val;
+        await saveConfig();
+        showToast('Guardado ✓');
+      }, true, true);
+      card.appendChild(mcard);
+    });
+
+    wrap.appendChild(card);
+  }
+
+  // ── TABLA TAB ──
+  async function renderTabla(wrap) {
+    const idx = await storageGet('players_index') || [];
+    const scores = [];
+    for (const name of idx) {
+      const data = await storageGet('predictions:' + name);
+      if (!data) continue;
+      const pts = calcPoints(data.predictions, config.actuals, config.matches);
+      scores.push({ name, pts });
+    }
+    scores.sort((a,b) => b.pts - a.pts);
+
+    const card = el('div', { class:'card' });
+    card.appendChild(el('h2', {}, `🏆 Tabla de posiciones`));
+    card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginBottom:'14px'} },
+      '3 pts exacto · 1 pt resultado correcto · actualiza al refrescar'));
+
+    if (scores.length === 0) {
+      card.appendChild(el('p', { style:{color:'var(--muted)',textAlign:'center',padding:'20px'} },
+        'Nadie ha ingresado predicciones aún.'));
+    } else {
+      scores.forEach((s, i) => {
+        const row = el('div', { class: i===0 ? 'rank-row first' : 'rank-row' });
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+        row.appendChild(el('div', { class:'rank-medal' }, medal));
+        row.appendChild(el('div', { class:'rank-name' }, s.name));
+        const pts = el('div', { class:'rank-pts' }, `${s.pts}`);
+        pts.appendChild(el('span', {}, 'pts'));
+        row.appendChild(pts);
+        card.appendChild(row);
+      });
+    }
+
+    const refreshBtn = el('button', { class:'btn btn-blue', style:{marginTop:'12px'} }, '🔄 Actualizar');
+    refreshBtn.addEventListener('click', () => { activeTab='tabla'; render(); });
+    card.appendChild(refreshBtn);
+    wrap.appendChild(card);
+
+    // detail per player
+    if (scores.length > 0) {
+      const detCard = el('div', { class:'card' });
+      detCard.appendChild(el('h2', {}, '📊 Detalle por jugador'));
+      for (const s of scores) {
+        const data = await storageGet('predictions:' + s.name);
+        if (!data) continue;
+        const sec = el('div', { style:{ marginBottom:'16px', borderBottom:'1px solid var(--border)', paddingBottom:'14px' } });
+        sec.appendChild(el('div', { style:{ fontWeight:800, fontSize:14, color:'var(--text)', marginBottom:'8px' } },
+          `${s.name} — ${s.pts} pts`));
+        config.matches.forEach(id => {
+          const match = MATCHES.find(m=>m.id===id);
+          if (!match) return;
+          const pred = data.predictions[id];
+          const actual = config.actuals[id];
+          sec.appendChild(makeMatchCard(match, pred, null, actual, null, false, true));
+        });
+        detCard.appendChild(sec);
+      }
+      wrap.appendChild(detCard);
+    }
+  }
+
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PLAYER APP
+// ═══════════════════════════════════════════════════════════════════════════════
+async function renderPlayerApp() {
+  let playerName = '';
+  let predictions = {};
+  let config = null;
+  let submitted = false;
+  let activeGroup = 'all';
+
+  async function loadConfig() {
+    config = await storageGet('config');
+  }
+
+  function renderLogin() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '⚽'),
+      el('h1', {}, 'Concurso Mundialero Contraloría 2026'),
+      el('p', {}, 'Predice los marcadores · Gana puntos')
+    ));
+
+    const card = el('div', { class:'login-card', style:{ margin:'0 auto' } });
+    card.appendChild(el('div', { style:{fontSize:'40px',marginBottom:'12px'} }, '🏟️'));
+    card.appendChild(el('h2', {}, '¿Cómo te llamas?'));
+    card.appendChild(el('p', {}, 'Ingresa tu nombre para registrar tus predicciones'));
+
+    const input = el('input', { class:'input', type:'text', placeholder:'Tu nombre o apodo', style:{marginBottom:'14px',textAlign:'center',fontSize:'17px'} });
+    card.appendChild(input);
+
+    const btn = el('button', { class:'btn btn-gold', style:{marginTop:'4px'} }, 'Ingresar 🚀');
+    btn.addEventListener('click', async () => {
+      const name = input.value.trim();
+      if (!name) { showToast('Ingresa tu nombre'); return; }
+      playerName = name;
+
+      // check if already submitted
+      const existing = await storageGet('predictions:' + name);
+      if (existing) {
+        predictions = existing.predictions;
+        submitted = true;
+        renderPredictions();
+        return;
+      }
+
+      // init empty predictions
+      if (config) {
+        config.matches.forEach(id => { predictions[id] = { home:'', away:'' }; });
+      }
+      submitted = false;
+      renderPredictions();
+    });
+    input.addEventListener('keydown', e => { if (e.key==='Enter') btn.click(); });
+    card.appendChild(btn);
+
+    const loginWrap = el('div', { class:'login-wrap' });
+    loginWrap.appendChild(card);
+    wrap.appendChild(loginWrap);
+    root.appendChild(wrap);
+  }
+
+  function renderPredictions() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+
+    // header
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '⚽'),
+      el('h1', {}, 'Concurso Mundialero Contraloría 2026'),
+      el('p', {}, `Hola, ${playerName} 👋`)
+    ));
+
+    if (!config) {
+      wrap.appendChild(el('div', { class:'card' },
+        el('p', { style:{textAlign:'center',color:'var(--muted)'} }, 'El concurso aún no está configurado. Vuelve más tarde.')));
+      root.appendChild(wrap);
+      return;
+    }
+
+    if (config.status === 'closed' && !submitted) {
+      wrap.appendChild(el('div', { class:'card' },
+        el('p', { style:{textAlign:'center',color:'var(--red)',fontWeight:700} }, '🔒 El concurso está cerrado. No se aceptan nuevas predicciones.')));
+      root.appendChild(wrap);
+      return;
+    }
+
+    // submitted banner
+    if (submitted) {
+      const banner = el('div', { class:'submitted-banner' });
+      banner.appendChild(el('h3', {}, '✅ ¡Predicciones enviadas!'));
+      banner.appendChild(el('p', {}, 'Aquí están tus picks. Revisa la tabla de posiciones más tarde.'));
+      wrap.appendChild(banner);
+    }
+
+    // progress
+    if (!submitted) {
+      const filled = config.matches.filter(id => {
+        const p = predictions[id];
+        return p && p.home !== '' && p.away !== '';
+      }).length;
+      const total = config.matches.length;
+      const progWrap = el('div', {});
+      progWrap.appendChild(el('div', { style:{ display:'flex', justifyContent:'space-between', color:'rgba(255,255,255,0.8)', fontSize:'12px', marginBottom:'6px' } },
+        el('span', {}, '⚽ Tus predicciones'),
+        el('span', {}, `${filled}/${total} completados`)
+      ));
+      const track = el('div', { class:'prog-track' });
+      const fill = el('div', { class:'prog-fill', style:{ width: total?`${(filled/total)*100}%`:'0%' } });
+      track.appendChild(fill);
+      progWrap.appendChild(track);
+      wrap.appendChild(progWrap);
+    }
+
+    // group filter
+    const groups = ['all', ...new Set(config.matches.map(id => MATCHES.find(m=>m.id===id)?.group).filter(Boolean)).values()].sort((a,b)=>a==='all'?-1:a.localeCompare(b));
+    const gf = el('div', { class:'group-filter' });
+    groups.forEach(g => {
+      const btn = el('button', { class: activeGroup===g ? 'gchip on' : 'gchip off' }, g==='all'?'Todos':`G ${g}`);
+      btn.addEventListener('click', () => { activeGroup=g; renderPredictions(); });
+      gf.appendChild(btn);
+    });
+    wrap.appendChild(gf);
+
+    // match cards
+    const matchesToShow = config.matches.filter(id => {
+      const m = MATCHES.find(m=>m.id===id);
+      return m && (activeGroup==='all' || m.group===activeGroup);
+    });
+
+    matchesToShow.forEach(id => {
+      const match = MATCHES.find(m=>m.id===id);
+      if (!match) return;
+      const actual = config.actuals?.[id];
+      const hasActual = actual && typeof actual.home === 'number';
+      const card = makeMatchCard(
+        match,
+        predictions[id] || { home:'', away:'' },
+        submitted ? null : (val) => { predictions[id] = val; },
+        hasActual ? actual : null,
+        null,
+        false,
+        submitted
+      );
+      wrap.appendChild(card);
+    });
+
+    // submit button
+    if (!submitted) {
+      const filled = config.matches.filter(id => {
+        const p = predictions[id];
+        return p && p.home !== '' && p.away !== '';
+      }).length;
+
+      const submitBtn = el('button', {
+        class: 'btn btn-gold',
+        style:{ marginTop:'8px', marginBottom:'8px' },
+        ...(filled < config.matches.length ? { disabled:'' } : {})
+      }, filled < config.matches.length
+        ? `Faltan ${config.matches.length - filled} partidos`
+        : '✅ Enviar predicciones');
+
+      submitBtn.addEventListener('click', async () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Guardando…';
+
+        // register in index
+        let idx = await storageGet('players_index') || [];
+        if (!idx.includes(playerName)) { idx.push(playerName); await storageSet('players_index', idx); }
+
+        // save predictions
+        await storageSet('predictions:' + playerName, { name: playerName, predictions, submittedAt: Date.now() });
+
+        submitted = true;
+        showToast('¡Predicciones guardadas! 🎉');
+        renderPredictions();
+      });
+      wrap.appendChild(submitBtn);
+    }
+
+    root.appendChild(wrap);
+  }
+
+  await loadConfig();
+  renderLogin();
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

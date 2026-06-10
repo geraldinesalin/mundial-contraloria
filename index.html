@@ -147,32 +147,90 @@
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const MATCHES = [
-  { id:1,  group:"A", home:"México",       away:"Sudáfrica",       date:"11 Jun", f1:"🇲🇽", f2:"🇿🇦" },
-  { id:2,  group:"A", home:"Corea del Sur",away:"Chequia",         date:"11 Jun", f1:"🇰🇷", f2:"🇨🇿" },
-  { id:3,  group:"A", home:"México",       away:"Corea del Sur",   date:"15 Jun", f1:"🇲🇽", f2:"🇰🇷" },
-  { id:4,  group:"A", home:"Chequia",      away:"Sudáfrica",       date:"15 Jun", f1:"🇨🇿", f2:"🇿🇦" },
-  { id:5,  group:"A", home:"Chequia",      away:"México",          date:"19 Jun", f1:"🇨🇿", f2:"🇲🇽" },
-  { id:6,  group:"A", home:"Sudáfrica",    away:"Corea del Sur",   date:"19 Jun", f1:"🇿🇦", f2:"🇰🇷" },
-  { id:7,  group:"B", home:"Canadá",       away:"Bosnia y Herz.",  date:"12 Jun", f1:"🇨🇦", f2:"🇧🇦" },
-  { id:8,  group:"B", home:"Qatar",        away:"Suiza",           date:"13 Jun", f1:"🇶🇦", f2:"🇨🇭" },
-  { id:9,  group:"B", home:"Canadá",       away:"Qatar",           date:"17 Jun", f1:"🇨🇦", f2:"🇶🇦" },
-  { id:10, group:"B", home:"Suiza",        away:"Bosnia y Herz.",  date:"17 Jun", f1:"🇨🇭", f2:"🇧🇦" },
-  { id:11, group:"C", home:"Brasil",       away:"Marruecos",       date:"13 Jun", f1:"🇧🇷", f2:"🇲🇦" },
-  { id:12, group:"C", home:"Haití",        away:"Escocia",         date:"13 Jun", f1:"🇭🇹", f2:"🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-  { id:13, group:"D", home:"EE.UU.",       away:"Paraguay",        date:"12 Jun", f1:"🇺🇸", f2:"🇵🇾" },
-  { id:14, group:"D", home:"Australia",    away:"Turquía",         date:"13 Jun", f1:"🇦🇺", f2:"🇹🇷" },
-  { id:15, group:"G", home:"Bélgica",      away:"Egipto",          date:"15 Jun", f1:"🇧🇪", f2:"🇪🇬" },
-  { id:16, group:"G", home:"Irán",         away:"Nueva Zelanda",   date:"15 Jun", f1:"🇮🇷", f2:"🇳🇿" },
-  { id:17, group:"H", home:"España",       away:"Cabo Verde",      date:"15 Jun", f1:"🇪🇸", f2:"🇨🇻" },
-  { id:18, group:"H", home:"Arabia Saudita",away:"Uruguay",        date:"15 Jun", f1:"🇸🇦", f2:"🇺🇾" },
-  { id:19, group:"I", home:"Francia",      away:"Senegal",         date:"16 Jun", f1:"🇫🇷", f2:"🇸🇳" },
-  { id:20, group:"I", home:"Irak",         away:"Noruega",         date:"16 Jun", f1:"🇮🇶", f2:"🇳🇴" },
-  { id:21, group:"J", home:"Argentina",    away:"Argelia",         date:"17 Jun", f1:"🇦🇷", f2:"🇩🇿" },
-  { id:22, group:"J", home:"Austria",      away:"Jordania",        date:"17 Jun", f1:"🇦🇹", f2:"🇯🇴" },
-  { id:23, group:"K", home:"Portugal",     away:"R.D. Congo",      date:"18 Jun", f1:"🇵🇹", f2:"🇨🇩" },
-  { id:24, group:"K", home:"Uzbekistán",   away:"Colombia",        date:"18 Jun", f1:"🇺🇿", f2:"🇨🇴" },
-  { id:25, group:"L", home:"Inglaterra",   away:"Croacia",         date:"18 Jun", f1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", f2:"🇭🇷" },
-  { id:26, group:"L", home:"Ghana",        away:"Panamá",          date:"18 Jun", f1:"🇬🇭", f2:"🇵🇦" },
+  // ── GRUPO A ──
+  { id:1,  group:"A", home:"México",          away:"Sudáfrica",        date:"11 Jun", f1:"🇲🇽", f2:"🇿🇦" },
+  { id:2,  group:"A", home:"Corea del Sur",   away:"Chequia",          date:"11 Jun", f1:"🇰🇷", f2:"🇨🇿" },
+  { id:3,  group:"A", home:"Chequia",         away:"Sudáfrica",        date:"18 Jun", f1:"🇨🇿", f2:"🇿🇦" },
+  { id:4,  group:"A", home:"México",          away:"Corea del Sur",    date:"18 Jun", f1:"🇲🇽", f2:"🇰🇷" },
+  { id:5,  group:"A", home:"Chequia",         away:"México",           date:"24 Jun", f1:"🇨🇿", f2:"🇲🇽" },
+  { id:6,  group:"A", home:"Sudáfrica",       away:"Corea del Sur",    date:"24 Jun", f1:"🇿🇦", f2:"🇰🇷" },
+  // ── GRUPO B ──
+  { id:7,  group:"B", home:"Canadá",          away:"Bosnia y Herz.",   date:"12 Jun", f1:"🇨🇦", f2:"🇧🇦" },
+  { id:8,  group:"B", home:"Qatar",           away:"Suiza",            date:"13 Jun", f1:"🇶🇦", f2:"🇨🇭" },
+  { id:9,  group:"B", home:"Suiza",           away:"Bosnia y Herz.",   date:"18 Jun", f1:"🇨🇭", f2:"🇧🇦" },
+  { id:10, group:"B", home:"Canadá",          away:"Qatar",            date:"18 Jun", f1:"🇨🇦", f2:"🇶🇦" },
+  { id:11, group:"B", home:"Suiza",           away:"Canadá",           date:"24 Jun", f1:"🇨🇭", f2:"🇨🇦" },
+  { id:12, group:"B", home:"Bosnia y Herz.",  away:"Qatar",            date:"24 Jun", f1:"🇧🇦", f2:"🇶🇦" },
+  // ── GRUPO C ──
+  { id:13, group:"C", home:"Brasil",          away:"Marruecos",        date:"13 Jun", f1:"🇧🇷", f2:"🇲🇦" },
+  { id:14, group:"C", home:"Haití",           away:"Escocia",          date:"13 Jun", f1:"🇭🇹", f2:"🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+  { id:15, group:"C", home:"Escocia",         away:"Marruecos",        date:"19 Jun", f1:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", f2:"🇲🇦" },
+  { id:16, group:"C", home:"Brasil",          away:"Haití",            date:"19 Jun", f1:"🇧🇷", f2:"🇭🇹" },
+  { id:17, group:"C", home:"Escocia",         away:"Brasil",           date:"24 Jun", f1:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", f2:"🇧🇷" },
+  { id:18, group:"C", home:"Marruecos",       away:"Haití",            date:"24 Jun", f1:"🇲🇦", f2:"🇭🇹" },
+  // ── GRUPO D ──
+  { id:19, group:"D", home:"EE.UU.",          away:"Paraguay",         date:"12 Jun", f1:"🇺🇸", f2:"🇵🇾" },
+  { id:20, group:"D", home:"Australia",       away:"Turquía",          date:"13 Jun", f1:"🇦🇺", f2:"🇹🇷" },
+  { id:21, group:"D", home:"EE.UU.",          away:"Australia",        date:"19 Jun", f1:"🇺🇸", f2:"🇦🇺" },
+  { id:22, group:"D", home:"Turquía",         away:"Paraguay",         date:"19 Jun", f1:"🇹🇷", f2:"🇵🇾" },
+  { id:23, group:"D", home:"Turquía",         away:"EE.UU.",           date:"25 Jun", f1:"🇹🇷", f2:"🇺🇸" },
+  { id:24, group:"D", home:"Paraguay",        away:"Australia",        date:"25 Jun", f1:"🇵🇾", f2:"🇦🇺" },
+  // ── GRUPO E ──
+  { id:25, group:"E", home:"Alemania",        away:"Curazao",          date:"14 Jun", f1:"🇩🇪", f2:"🇨🇼" },
+  { id:26, group:"E", home:"Costa de Marfil", away:"Ecuador",          date:"14 Jun", f1:"🇨🇮", f2:"🇪🇨" },
+  { id:27, group:"E", home:"Alemania",        away:"Costa de Marfil",  date:"20 Jun", f1:"🇩🇪", f2:"🇨🇮" },
+  { id:28, group:"E", home:"Ecuador",         away:"Curazao",          date:"20 Jun", f1:"🇪🇨", f2:"🇨🇼" },
+  { id:29, group:"E", home:"Curazao",         away:"Costa de Marfil",  date:"25 Jun", f1:"🇨🇼", f2:"🇨🇮" },
+  { id:30, group:"E", home:"Ecuador",         away:"Alemania",         date:"25 Jun", f1:"🇪🇨", f2:"🇩🇪" },
+  // ── GRUPO F ──
+  { id:31, group:"F", home:"Países Bajos",    away:"Japón",            date:"14 Jun", f1:"🇳🇱", f2:"🇯🇵" },
+  { id:32, group:"F", home:"Suecia",          away:"Túnez",            date:"14 Jun", f1:"🇸🇪", f2:"🇹🇳" },
+  { id:33, group:"F", home:"Países Bajos",    away:"Suecia",           date:"20 Jun", f1:"🇳🇱", f2:"🇸🇪" },
+  { id:34, group:"F", home:"Túnez",           away:"Japón",            date:"20 Jun", f1:"🇹🇳", f2:"🇯🇵" },
+  { id:35, group:"F", home:"Japón",           away:"Suecia",           date:"25 Jun", f1:"🇯🇵", f2:"🇸🇪" },
+  { id:36, group:"F", home:"Túnez",           away:"Países Bajos",     date:"25 Jun", f1:"🇹🇳", f2:"🇳🇱" },
+  // ── GRUPO G ──
+  { id:37, group:"G", home:"Bélgica",         away:"Egipto",           date:"15 Jun", f1:"🇧🇪", f2:"🇪🇬" },
+  { id:38, group:"G", home:"Irán",            away:"Nueva Zelanda",    date:"15 Jun", f1:"🇮🇷", f2:"🇳🇿" },
+  { id:39, group:"G", home:"Bélgica",         away:"Irán",             date:"21 Jun", f1:"🇧🇪", f2:"🇮🇷" },
+  { id:40, group:"G", home:"Nueva Zelanda",   away:"Egipto",           date:"21 Jun", f1:"🇳🇿", f2:"🇪🇬" },
+  { id:41, group:"G", home:"Egipto",          away:"Irán",             date:"26 Jun", f1:"🇪🇬", f2:"🇮🇷" },
+  { id:42, group:"G", home:"Nueva Zelanda",   away:"Bélgica",          date:"26 Jun", f1:"🇳🇿", f2:"🇧🇪" },
+  // ── GRUPO H ──
+  { id:43, group:"H", home:"España",          away:"Cabo Verde",       date:"15 Jun", f1:"🇪🇸", f2:"🇨🇻" },
+  { id:44, group:"H", home:"Arabia Saudita",  away:"Uruguay",          date:"15 Jun", f1:"🇸🇦", f2:"🇺🇾" },
+  { id:45, group:"H", home:"España",          away:"Arabia Saudita",   date:"21 Jun", f1:"🇪🇸", f2:"🇸🇦" },
+  { id:46, group:"H", home:"Uruguay",         away:"Cabo Verde",       date:"21 Jun", f1:"🇺🇾", f2:"🇨🇻" },
+  { id:47, group:"H", home:"Cabo Verde",      away:"Arabia Saudita",   date:"26 Jun", f1:"🇨🇻", f2:"🇸🇦" },
+  { id:48, group:"H", home:"Uruguay",         away:"España",           date:"26 Jun", f1:"🇺🇾", f2:"🇪🇸" },
+  // ── GRUPO I ──
+  { id:49, group:"I", home:"Francia",         away:"Senegal",          date:"16 Jun", f1:"🇫🇷", f2:"🇸🇳" },
+  { id:50, group:"I", home:"Irak",            away:"Noruega",          date:"16 Jun", f1:"🇮🇶", f2:"🇳🇴" },
+  { id:51, group:"I", home:"Francia",         away:"Irak",             date:"22 Jun", f1:"🇫🇷", f2:"🇮🇶" },
+  { id:52, group:"I", home:"Noruega",         away:"Senegal",          date:"22 Jun", f1:"🇳🇴", f2:"🇸🇳" },
+  { id:53, group:"I", home:"Noruega",         away:"Francia",          date:"26 Jun", f1:"🇳🇴", f2:"🇫🇷" },
+  { id:54, group:"I", home:"Senegal",         away:"Irak",             date:"26 Jun", f1:"🇸🇳", f2:"🇮🇶" },
+  // ── GRUPO J ──
+  { id:55, group:"J", home:"Argentina",       away:"Argelia",          date:"16 Jun", f1:"🇦🇷", f2:"🇩🇿" },
+  { id:56, group:"J", home:"Austria",         away:"Jordania",         date:"16 Jun", f1:"🇦🇹", f2:"🇯🇴" },
+  { id:57, group:"J", home:"Argentina",       away:"Austria",          date:"22 Jun", f1:"🇦🇷", f2:"🇦🇹" },
+  { id:58, group:"J", home:"Jordania",        away:"Argelia",          date:"22 Jun", f1:"🇯🇴", f2:"🇩🇿" },
+  { id:59, group:"J", home:"Jordania",        away:"Argentina",        date:"27 Jun", f1:"🇯🇴", f2:"🇦🇷" },
+  { id:60, group:"J", home:"Argelia",         away:"Austria",          date:"27 Jun", f1:"🇩🇿", f2:"🇦🇹" },
+  // ── GRUPO K ──
+  { id:61, group:"K", home:"Portugal",        away:"R.D. Congo",       date:"17 Jun", f1:"🇵🇹", f2:"🇨🇩" },
+  { id:62, group:"K", home:"Uzbekistán",      away:"Colombia",         date:"17 Jun", f1:"🇺🇿", f2:"🇨🇴" },
+  { id:63, group:"K", home:"Portugal",        away:"Uzbekistán",       date:"23 Jun", f1:"🇵🇹", f2:"🇺🇿" },
+  { id:64, group:"K", home:"Colombia",        away:"R.D. Congo",       date:"23 Jun", f1:"🇨🇴", f2:"🇨🇩" },
+  { id:65, group:"K", home:"Colombia",        away:"Portugal",         date:"27 Jun", f1:"🇨🇴", f2:"🇵🇹" },
+  { id:66, group:"K", home:"R.D. Congo",      away:"Uzbekistán",       date:"27 Jun", f1:"🇨🇩", f2:"🇺🇿" },
+  // ── GRUPO L ──
+  { id:67, group:"L", home:"Inglaterra",      away:"Croacia",          date:"17 Jun", f1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", f2:"🇭🇷" },
+  { id:68, group:"L", home:"Ghana",           away:"Panamá",           date:"17 Jun", f1:"🇬🇭", f2:"🇵🇦" },
+  { id:69, group:"L", home:"Inglaterra",      away:"Ghana",            date:"23 Jun", f1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", f2:"🇬🇭" },
+  { id:70, group:"L", home:"Panamá",          away:"Croacia",          date:"23 Jun", f1:"🇵🇦", f2:"🇭🇷" },
+  { id:71, group:"L", home:"Panamá",          away:"Inglaterra",       date:"27 Jun", f1:"🇵🇦", f2:"🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { id:72, group:"L", home:"Croacia",         away:"Ghana",            date:"27 Jun", f1:"🇭🇷", f2:"🇬🇭" },
 ];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -343,7 +401,7 @@ async function init() {
 // ADMIN APP
 // ═══════════════════════════════════════════════════════════════════════════════
 async function renderAdminApp() {
-  let config = await storageGet('config') || { matches: MATCHES.slice(0,10).map(m=>m.id), status:'open', actuals:{} };
+  let config = await storageGet('config') || { matches: MATCHES.map(m=>m.id), status:'open', actuals:{} };
   let activeTab = 'setup';
   let activeGroup = 'all';
 

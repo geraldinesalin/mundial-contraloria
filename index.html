@@ -397,6 +397,67 @@ async function init() {
   }
 }
 
+// ─── SHARED: RANKING / TABLA ──────────────────────────────────────────────────
+async function renderRankingCards(wrap, config, opts={}) {
+  const idx = await storageGet('players_index') || [];
+  const scores = [];
+  for (const name of idx) {
+    const data = await storageGet('predictions:' + name);
+    if (!data) continue;
+    const pts = calcPoints(data.predictions, config.actuals, config.matches);
+    scores.push({ name, pts, data });
+  }
+  scores.sort((a,b) => b.pts - a.pts);
+
+  const card = el('div', { class:'card' });
+  card.appendChild(el('h2', {}, `🏆 Tabla de posiciones`));
+  card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginBottom:'14px'} },
+    '3 pts exacto · 1 pt resultado correcto · actualiza al refrescar'));
+
+  if (scores.length === 0) {
+    card.appendChild(el('p', { style:{color:'var(--muted)',textAlign:'center',padding:'20px'} },
+      'Nadie ha ingresado predicciones aún.'));
+  } else {
+    scores.forEach((s, i) => {
+      const row = el('div', { class: i===0 ? 'rank-row first' : 'rank-row' });
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+      row.appendChild(el('div', { class:'rank-medal' }, medal));
+      row.appendChild(el('div', { class:'rank-name' }, s.name));
+      const pts = el('div', { class:'rank-pts' }, `${s.pts}`);
+      pts.appendChild(el('span', {}, 'pts'));
+      row.appendChild(pts);
+      card.appendChild(row);
+    });
+  }
+
+  if (opts.onRefresh) {
+    const refreshBtn = el('button', { class:'btn btn-blue', style:{marginTop:'12px'} }, '🔄 Actualizar');
+    refreshBtn.addEventListener('click', opts.onRefresh);
+    card.appendChild(refreshBtn);
+  }
+  wrap.appendChild(card);
+
+  // detail per player
+  if (scores.length > 0) {
+    const detCard = el('div', { class:'card' });
+    detCard.appendChild(el('h2', {}, '📊 Detalle por jugador'));
+    for (const s of scores) {
+      const sec = el('div', { style:{ marginBottom:'16px', borderBottom:'1px solid var(--border)', paddingBottom:'14px' } });
+      sec.appendChild(el('div', { style:{ fontWeight:800, fontSize:14, color:'var(--text)', marginBottom:'8px' } },
+        `${s.name} — ${s.pts} pts`));
+      config.matches.forEach(id => {
+        const match = MATCHES.find(m=>m.id===id);
+        if (!match) return;
+        const pred = s.data.predictions[id];
+        const actual = config.actuals[id];
+        sec.appendChild(makeMatchCard(match, pred, null, actual, null, false, true));
+      });
+      detCard.appendChild(sec);
+    }
+    wrap.appendChild(detCard);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ADMIN APP
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -586,63 +647,7 @@ async function renderAdminApp() {
 
   // ── TABLA TAB ──
   async function renderTabla(wrap) {
-    const idx = await storageGet('players_index') || [];
-    const scores = [];
-    for (const name of idx) {
-      const data = await storageGet('predictions:' + name);
-      if (!data) continue;
-      const pts = calcPoints(data.predictions, config.actuals, config.matches);
-      scores.push({ name, pts });
-    }
-    scores.sort((a,b) => b.pts - a.pts);
-
-    const card = el('div', { class:'card' });
-    card.appendChild(el('h2', {}, `🏆 Tabla de posiciones`));
-    card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginBottom:'14px'} },
-      '3 pts exacto · 1 pt resultado correcto · actualiza al refrescar'));
-
-    if (scores.length === 0) {
-      card.appendChild(el('p', { style:{color:'var(--muted)',textAlign:'center',padding:'20px'} },
-        'Nadie ha ingresado predicciones aún.'));
-    } else {
-      scores.forEach((s, i) => {
-        const row = el('div', { class: i===0 ? 'rank-row first' : 'rank-row' });
-        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-        row.appendChild(el('div', { class:'rank-medal' }, medal));
-        row.appendChild(el('div', { class:'rank-name' }, s.name));
-        const pts = el('div', { class:'rank-pts' }, `${s.pts}`);
-        pts.appendChild(el('span', {}, 'pts'));
-        row.appendChild(pts);
-        card.appendChild(row);
-      });
-    }
-
-    const refreshBtn = el('button', { class:'btn btn-blue', style:{marginTop:'12px'} }, '🔄 Actualizar');
-    refreshBtn.addEventListener('click', () => { activeTab='tabla'; render(); });
-    card.appendChild(refreshBtn);
-    wrap.appendChild(card);
-
-    // detail per player
-    if (scores.length > 0) {
-      const detCard = el('div', { class:'card' });
-      detCard.appendChild(el('h2', {}, '📊 Detalle por jugador'));
-      for (const s of scores) {
-        const data = await storageGet('predictions:' + s.name);
-        if (!data) continue;
-        const sec = el('div', { style:{ marginBottom:'16px', borderBottom:'1px solid var(--border)', paddingBottom:'14px' } });
-        sec.appendChild(el('div', { style:{ fontWeight:800, fontSize:14, color:'var(--text)', marginBottom:'8px' } },
-          `${s.name} — ${s.pts} pts`));
-        config.matches.forEach(id => {
-          const match = MATCHES.find(m=>m.id===id);
-          if (!match) return;
-          const pred = data.predictions[id];
-          const actual = config.actuals[id];
-          sec.appendChild(makeMatchCard(match, pred, null, actual, null, false, true));
-        });
-        detCard.appendChild(sec);
-      }
-      wrap.appendChild(detCard);
-    }
+    await renderRankingCards(wrap, config, { onRefresh: () => { activeTab='tabla'; render(); } });
   }
 
   render();
@@ -655,7 +660,7 @@ async function renderPlayerApp() {
   let playerName = '';
   let predictions = {};
   let config = null;
-  let submitted = false;
+  let lastSavedAt = null;
   let activeGroup = 'all';
 
   async function loadConfig() {
@@ -685,30 +690,57 @@ async function renderPlayerApp() {
       if (!name) { showToast('Ingresa tu nombre'); return; }
       playerName = name;
 
-      // check if already submitted
+      // cargar predicciones existentes (si las hay) sin perderlas
       const existing = await storageGet('predictions:' + name);
-      if (existing) {
+      if (existing && existing.predictions) {
         predictions = existing.predictions;
-        submitted = true;
-        renderPredictions();
-        return;
+        lastSavedAt = existing.submittedAt || Date.now();
       }
 
-      // init empty predictions
+      // asegurar que existan entradas vacías para partidos nuevos agregados
       if (config) {
-        config.matches.forEach(id => { predictions[id] = { home:'', away:'' }; });
+        config.matches.forEach(id => {
+          if (!predictions[id]) predictions[id] = { home:'', away:'' };
+        });
       }
-      submitted = false;
+
       renderPredictions();
     });
     input.addEventListener('keydown', e => { if (e.key==='Enter') btn.click(); });
     card.appendChild(btn);
+
+    const rankBtn = el('button', { class:'btn btn-ghost', style:{ marginTop:'10px', background:'transparent', border:'none', color:'var(--bright)', textDecoration:'underline', fontWeight:700 } }, '🏆 Ver tabla de posiciones');
+    rankBtn.addEventListener('click', () => renderRanking());
+    card.appendChild(rankBtn);
 
     const loginWrap = el('div', { class:'login-wrap' });
     loginWrap.appendChild(card);
     wrap.appendChild(loginWrap);
     root.appendChild(wrap);
   }
+
+  async function renderRanking() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '⚽'),
+      el('h1', {}, 'Concurso Mundialero Contraloría 2026'),
+      el('p', {}, 'Tabla de posiciones en vivo')
+    ));
+
+    const backBtn = el('button', { class:'btn btn-ghost', style:{ marginBottom:'14px' } }, '← Volver');
+    backBtn.addEventListener('click', () => renderLogin());
+    wrap.appendChild(backBtn);
+
+    if (!config) {
+      wrap.appendChild(el('div', { class:'card' },
+        el('p', { style:{textAlign:'center',color:'var(--muted)'} }, 'El concurso aún no está configurado.')));
+    } else {
+      await renderRankingCards(wrap, config, { onRefresh: () => renderRanking() });
+    }
+    root.appendChild(wrap);
+  }
+
 
   function renderPredictions() {
     root.innerHTML = '';
@@ -728,23 +760,22 @@ async function renderPlayerApp() {
       return;
     }
 
-    if (config.status === 'closed' && !submitted) {
+    if (config.status === 'closed') {
       wrap.appendChild(el('div', { class:'card' },
         el('p', { style:{textAlign:'center',color:'var(--red)',fontWeight:700} }, '🔒 El concurso está cerrado. No se aceptan nuevas predicciones.')));
-      root.appendChild(wrap);
-      return;
     }
 
-    // submitted banner
-    if (submitted) {
+    // banner si ya tiene predicciones guardadas
+    const hasSaved = lastSavedAt !== null;
+    if (hasSaved) {
       const banner = el('div', { class:'submitted-banner' });
-      banner.appendChild(el('h3', {}, '✅ ¡Predicciones enviadas!'));
-      banner.appendChild(el('p', {}, 'Aquí están tus picks. Revisa la tabla de posiciones más tarde.'));
+      banner.appendChild(el('h3', {}, '✅ Tus predicciones están guardadas'));
+      banner.appendChild(el('p', {}, 'Puedes seguir completando los partidos que falten o editar los que aún no se han jugado.'));
       wrap.appendChild(banner);
     }
 
     // progress
-    if (!submitted) {
+    {
       const filled = config.matches.filter(id => {
         const p = predictions[id];
         return p && p.home !== '' && p.away !== '';
@@ -783,36 +814,34 @@ async function renderPlayerApp() {
       if (!match) return;
       const actual = config.actuals?.[id];
       const hasActual = actual && typeof actual.home === 'number';
+      const locked = hasActual || config.status === 'closed';
       const card = makeMatchCard(
         match,
         predictions[id] || { home:'', away:'' },
-        submitted ? null : (val) => { predictions[id] = val; },
+        locked ? null : (val) => { predictions[id] = val; },
         hasActual ? actual : null,
         null,
         false,
-        submitted
+        locked
       );
       wrap.appendChild(card);
     });
 
-    // submit button
-    if (!submitted) {
+    // save button
+    if (config.status !== 'closed') {
       const filled = config.matches.filter(id => {
         const p = predictions[id];
         return p && p.home !== '' && p.away !== '';
       }).length;
 
-      const submitBtn = el('button', {
+      const saveBtn = el('button', {
         class: 'btn btn-gold',
         style:{ marginTop:'8px', marginBottom:'8px' },
-        ...(filled < config.matches.length ? { disabled:'' } : {})
-      }, filled < config.matches.length
-        ? `Faltan ${config.matches.length - filled} partidos`
-        : '✅ Enviar predicciones');
+      }, hasSaved ? '💾 Actualizar predicciones' : '✅ Enviar predicciones');
 
-      submitBtn.addEventListener('click', async () => {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Guardando…';
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Guardando…';
 
         // register in index
         let idx = await storageGet('players_index') || [];
@@ -821,12 +850,16 @@ async function renderPlayerApp() {
         // save predictions
         await storageSet('predictions:' + playerName, { name: playerName, predictions, submittedAt: Date.now() });
 
-        submitted = true;
+        lastSavedAt = Date.now();
         showToast('¡Predicciones guardadas! 🎉');
         renderPredictions();
       });
-      wrap.appendChild(submitBtn);
+      wrap.appendChild(saveBtn);
     }
+
+    const rankBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'24px' } }, '🏆 Ver tabla de posiciones');
+    rankBtn2.addEventListener('click', () => renderRanking());
+    wrap.appendChild(rankBtn2);
 
     root.appendChild(wrap);
   }

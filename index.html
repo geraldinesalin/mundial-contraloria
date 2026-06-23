@@ -563,6 +563,16 @@ async function renderAdminApp() {
     });
     statusCard.appendChild(toggleBtn);
 
+    // fix duplicates
+    const fixBtn = el('button', { class:'btn btn-ghost', style:{marginTop:'8px'} }, '🔧 Reparar partidos duplicados');
+    fixBtn.addEventListener('click', async () => {
+      config.matches = [...new Set(MATCHES.map(m => m.id))]; // todos los 72, sin duplicados
+      await saveConfig();
+      showToast('¡Partidos reparados! ✓');
+      render();
+    });
+    statusCard.appendChild(fixBtn);
+
     // reset
     const resetBtn = el('button', { class:'btn btn-ghost', style:{marginTop:'8px'} }, '🗑️ Borrar todas las predicciones');
     resetBtn.addEventListener('click', async () => {

@@ -397,7 +397,170 @@ async function init() {
   }
 }
 
-// ─── SHARED: RANKING / TABLA ──────────────────────────────────────────────────
+// ─── SHARED: FIXTURE ─────────────────────────────────────────────────────────
+function renderFixtureCards(wrap, config, isAdmin) {
+  const actuals = config?.actuals || {};
+
+  // Bracket oficial Ronda de 32 (fuente: FIFA/Sky Sports/FOX Sports, 27 jun 2026)
+  const R32 = [
+    { date:'28 Jun', venue:'SoFi (LA)',      h:{f:'🇿🇦',n:'Sudáfrica'},     a:{f:'🇨🇦',n:'Canadá'},         confirmed:true,  score:null },
+    { date:'29 Jun', venue:'Houston',        h:{f:'🇧🇷',n:'Brasil'},          a:{f:'🇯🇵',n:'Japón'},           confirmed:true,  score:null },
+    { date:'29 Jun', venue:'Boston',         h:{f:'🇩🇪',n:'Alemania'},        a:{f:'🇵🇾',n:'Paraguay'},        confirmed:true,  score:null },
+    { date:'29 Jun', venue:'Monterrey',      h:{f:'🇳🇱',n:'Países Bajos'},    a:{f:'🇲🇦',n:'Marruecos'},      confirmed:true,  score:null },
+    { date:'30 Jun', venue:'NY/NJ',          h:{f:'🇫🇷',n:'Francia'},         a:{f:'🇸🇪',n:'Suecia'},          confirmed:true,  score:null },
+    { date:'30 Jun', venue:'Dallas',         h:{f:'🇨🇮',n:'Costa de Marfil'}, a:{f:'🇳🇴',n:'Noruega'},        confirmed:true,  score:null },
+    { date:'30 Jun', venue:'Ciudad de Méx.', h:{f:'🇲🇽',n:'México'},          a:{f:'❓',n:'3° Grupo C/E/F/H/I'}, confirmed:false, score:null },
+    { date:'1 Jul',  venue:'Atlanta',        h:{f:'🇺🇸',n:'EE.UU.'},          a:{f:'🇧🇦',n:'Bosnia y Herz.'}, confirmed:true,  score:null },
+    { date:'1 Jul',  venue:'Seattle',        h:{f:'🇧🇪',n:'Bélgica'},         a:{f:'❓',n:'3° Grupo A/I/J'},   confirmed:false, score:null },
+    { date:'1 Jul',  venue:'Toronto',        h:{f:'❓',n:'1° Grupo L'},        a:{f:'❓',n:'3° Grupo E/H/I/J/K'}, confirmed:false, score:null },
+    { date:'2 Jul',  venue:'Los Ángeles',    h:{f:'🇪🇸',n:'España'},           a:{f:'❓',n:'2° Grupo J'},       confirmed:false, score:null },
+    { date:'2 Jul',  venue:'Toronto',        h:{f:'❓',n:'2° Grupo K'},        a:{f:'❓',n:'2° Grupo L'},       confirmed:false, score:null },
+    { date:'2 Jul',  venue:'Vancouver',      h:{f:'🇨🇭',n:'Suiza'},            a:{f:'❓',n:'3° Grupo E/F/G/I/J'}, confirmed:false, score:null },
+    { date:'3 Jul',  venue:'Dallas',         h:{f:'🇦🇺',n:'Australia'},        a:{f:'🇪🇬',n:'Egipto'},          confirmed:true,  score:null },
+    { date:'3 Jul',  venue:'Miami',          h:{f:'🇦🇷',n:'Argentina'},        a:{f:'🇨🇻',n:'Cabo Verde'},      confirmed:true,  score:null },
+    { date:'3 Jul',  venue:'Por confirmar',  h:{f:'❓',n:'1° Grupo K'},        a:{f:'❓',n:'3° Grupo D/E/I/J/L'}, confirmed:false, score:null },
+  ];
+
+  // Grupos calculados desde resultados
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  const groupStandings = {};
+  groups.forEach(g => {
+    const gMatches = MATCHES.filter(m => m.group === g);
+    const teams = {};
+    gMatches.forEach(m => {
+      if (!teams[m.home]) teams[m.home] = { name:m.home, flag:m.f1, pts:0, gf:0, gc:0, played:0 };
+      if (!teams[m.away]) teams[m.away] = { name:m.away, flag:m.f2, pts:0, gf:0, gc:0, played:0 };
+      const act = actuals[m.id];
+      if (act && typeof act.home === 'number') {
+        teams[m.home].played++; teams[m.away].played++;
+        teams[m.home].gf += act.home; teams[m.home].gc += act.away;
+        teams[m.away].gf += act.away; teams[m.away].gc += act.home;
+        if (act.home > act.away) { teams[m.home].pts += 3; }
+        else if (act.home < act.away) { teams[m.away].pts += 3; }
+        else { teams[m.home].pts += 1; teams[m.away].pts += 1; }
+      }
+    });
+    groupStandings[g] = Object.values(teams).sort((a,b) => b.pts !== a.pts ? b.pts-a.pts : (b.gf-b.gc)-(a.gf-a.gc));
+  });
+
+  // Helper: fila de partido bracket
+  const mkMatchRow = (m) => {
+    const row = el('div', { style:{
+      background:'#fff', borderRadius:'10px', marginBottom:'7px',
+      border:`1.5px solid ${m.confirmed ? '#fca5a5' : '#e2e8f0'}`,
+      overflow:'hidden'
+    }});
+    const dateBar = el('div', { style:{
+      fontSize:'9px', fontWeight:700, color:'#fff',
+      background: m.confirmed ? '#7f1d1d' : '#94a3b8',
+      padding:'2px 8px', letterSpacing:'0.5px'
+    }}, `${m.date} · ${m.venue}`);
+    row.appendChild(dateBar);
+
+    const mkTeam = (t, right=false) => {
+      const d = el('div', { style:{
+        display:'flex', alignItems:'center', gap:'6px', padding:'6px 10px',
+        ...(right ? { flexDirection:'row-reverse', borderTop:'1px solid #f0e0e0' } : {})
+      }});
+      d.appendChild(el('span', { style:{fontSize:'18px',lineHeight:'1'} }, t.f));
+      const nameEl = el('span', { style:{
+        fontSize:'12px', fontWeight: m.confirmed ? 700 : 400,
+        color: m.confirmed ? '#3b0f0f' : '#94a3b8',
+        flex:1, textAlign: right ? 'right' : 'left'
+      }}, t.n);
+      d.appendChild(nameEl);
+      if (m.score) {
+        d.appendChild(el('span', { style:{fontSize:'14px',fontWeight:900,color:'#7f1d1d',minWidth:'16px',textAlign:'center'} },
+          right ? String(m.score.a) : String(m.score.h)));
+      }
+      return d;
+    };
+
+    row.appendChild(mkTeam(m.h));
+    row.appendChild(mkTeam(m.a, true));
+    return row;
+  };
+
+  // ── BRACKET RONDA DE 32
+  const bracketCard = el('div', { class:'card' });
+  bracketCard.appendChild(el('h2', {}, '🗺️ Bracket — Ronda de 32'));
+  bracketCard.appendChild(el('p', { style:{fontSize:'11px',color:'var(--muted)',marginBottom:'14px'} },
+    'Cruces oficiales FIFA · 28 jun – 3 jul · Actualizado al 27 jun 2026'));
+
+  const grid = el('div', { style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 10px'} });
+  R32.forEach(m => grid.appendChild(mkMatchRow(m)));
+  bracketCard.appendChild(grid);
+
+  // Leyenda
+  const leg = el('div', { style:{display:'flex',gap:'12px',marginTop:'10px',flexWrap:'wrap'} });
+  [{c:'#fca5a5',bg:'#7f1d1d',t:'Confirmado'},{c:'#e2e8f0',bg:'#94a3b8',t:'Por definir'}].forEach(({c,bg,t}) => {
+    const l = el('div', { style:{display:'flex',alignItems:'center',gap:'5px',fontSize:'10px',color:'var(--muted)'} });
+    const dot = el('div', { style:{width:'10px',height:'10px',borderRadius:'50%',background:bg,flexShrink:0} });
+    l.appendChild(dot); l.appendChild(document.createTextNode(t));
+    leg.appendChild(l);
+  });
+  bracketCard.appendChild(leg);
+  wrap.appendChild(bracketCard);
+
+  // ── RONDAS SIGUIENTES (placeholders)
+  const laterCard = el('div', { class:'card' });
+  laterCard.appendChild(el('h2', {}, '⏳ Próximas rondas'));
+
+  const rounds = [
+    { label:'Octavos de final', dates:'5–8 jul', n:8 },
+    { label:'Cuartos de final', dates:'11–12 jul', n:4 },
+    { label:'Semifinales', dates:'15–16 jul', n:2 },
+    { label:'FINAL 🏆', dates:'19 jul · MetLife (NY)', n:1 },
+  ];
+  rounds.forEach(r => {
+    const sec = el('div', { style:{marginBottom:'12px'} });
+    const hdr = el('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px'} });
+    hdr.appendChild(el('span', { style:{fontSize:'11px',fontWeight:800,color:'#7f1d1d'} }, r.label));
+    hdr.appendChild(el('span', { style:{fontSize:'10px',color:'var(--muted)'} }, r.dates));
+    sec.appendChild(hdr);
+    const g = el('div', { style:{display:'grid',gridTemplateColumns: r.n > 2 ? '1fr 1fr' : '1fr',gap:'5px'} });
+    for (let i = 0; i < r.n; i++) {
+      const ph = el('div', { style:{
+        background:'#f8faff', border:'1px dashed #e2e8f0', borderRadius:'8px',
+        padding:'8px 10px', fontSize:'11px', color:'#9ca3af', textAlign:'center'
+      }}, 'Por definir');
+      g.appendChild(ph);
+    }
+    sec.appendChild(g);
+    laterCard.appendChild(sec);
+  });
+  wrap.appendChild(laterCard);
+
+  // ── POSICIONES POR GRUPO
+  const grupCard = el('div', { class:'card' });
+  grupCard.appendChild(el('h2', {}, '📊 Posiciones por grupo'));
+  groups.forEach(g => {
+    const standings = groupStandings[g];
+    const sec = el('div', { style:{marginBottom:'16px'} });
+    sec.appendChild(el('div', { style:{
+      fontSize:'10px',fontWeight:800,color:'#fff',background:'#7f1d1d',
+      padding:'3px 10px',borderRadius:'6px',display:'inline-block',marginBottom:'8px'
+    }}, `GRUPO ${g}`));
+    standings.forEach((t, i) => {
+      const row = el('div', { style:{
+        display:'flex',alignItems:'center',gap:'8px',padding:'6px 8px',
+        borderRadius:'8px',marginBottom:'4px',
+        background: i<2 ? '#fff0f0' : 'var(--bg-light)',
+        border:`1.5px solid ${i<2 ? '#fca5a5' : 'var(--border)'}`,
+      }});
+      row.appendChild(el('span', { style:{fontSize:'12px',fontWeight:800,color:i<2?'#b91c1c':'var(--muted)',width:'16px'} }, `${i+1}`));
+      row.appendChild(el('span', { style:{fontSize:'18px'} }, t.flag));
+      row.appendChild(el('span', { style:{flex:1,fontSize:'12px',fontWeight:i<2?700:400,color:'var(--text)'} }, t.name));
+      row.appendChild(el('span', { style:{fontSize:'12px',fontWeight:700,color:'var(--text)'} }, `${t.pts} pts`));
+      row.appendChild(el('span', { style:{fontSize:'11px',color:'var(--muted)',marginLeft:'4px'} }, `${t.gf}-${t.gc}`));
+      sec.appendChild(row);
+    });
+    grupCard.appendChild(sec);
+  });
+  wrap.appendChild(grupCard);
+}
+
+
 async function renderRankingCards(wrap, config, opts={}) {
   const idx = await storageGet('players_index') || [];
   const scores = [];
@@ -487,7 +650,7 @@ async function renderAdminApp() {
 
     // tabs
     const tabs = el('div', { class:'tabs' });
-    [['setup','⚙️ Config'],['qr','📱 QR'],['results','📋 Resultados'],['tabla','🏆 Tabla']].forEach(([id,label]) => {
+    [['setup','⚙️ Config'],['qr','📱 QR'],['results','📋 Resultados'],['fixture','🗺️ Fixture'],['tabla','🏆 Tabla']].forEach(([id,label]) => {
       const t = el('button', { class: activeTab===id ? 'tab active' : 'tab' }, label);
       t.addEventListener('click', () => { activeTab=id; render(); });
       tabs.appendChild(t);
@@ -497,6 +660,7 @@ async function renderAdminApp() {
     if (activeTab === 'setup') renderSetup(wrap);
     else if (activeTab === 'qr') renderQR(wrap);
     else if (activeTab === 'results') renderResults(wrap);
+    else if (activeTab === 'fixture') renderFixture(wrap);
     else if (activeTab === 'tabla') renderTabla(wrap);
 
     root.appendChild(wrap);
@@ -655,6 +819,11 @@ async function renderAdminApp() {
     wrap.appendChild(card);
   }
 
+  // ── FIXTURE TAB ──
+  function renderFixture(wrap) {
+    renderFixtureCards(wrap, config, true);
+  }
+
   // ── TABLA TAB ──
   async function renderTabla(wrap) {
     await renderRankingCards(wrap, config, { onRefresh: () => { activeTab='tabla'; render(); } });
@@ -723,9 +892,34 @@ async function renderPlayerApp() {
     rankBtn.addEventListener('click', () => renderRanking());
     card.appendChild(rankBtn);
 
+    const fixBtn0 = el('button', { class:'btn btn-ghost', style:{ marginTop:'6px', background:'transparent', border:'none', color:'var(--bright)', textDecoration:'underline', fontWeight:700 } }, '🗺️ Ver fixture y clasificados');
+    fixBtn0.addEventListener('click', () => renderFixturePlayer());
+    card.appendChild(fixBtn0);
+
     const loginWrap = el('div', { class:'login-wrap' });
     loginWrap.appendChild(card);
     wrap.appendChild(loginWrap);
+    root.appendChild(wrap);
+  }
+
+  async function renderFixturePlayer() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '⚽'),
+      el('h1', {}, 'Concurso Mundialero Contraloría 2026'),
+      el('p', {}, '🗺️ Fixture y clasificados')
+    ));
+    const backBtn = el('button', { class:'btn btn-ghost', style:{ marginBottom:'14px' } }, '← Volver');
+    backBtn.addEventListener('click', () => playerName ? renderPredictions() : renderLogin());
+    wrap.appendChild(backBtn);
+
+    if (!config) {
+      wrap.appendChild(el('div', { class:'card' },
+        el('p', { style:{textAlign:'center',color:'var(--muted)'} }, 'El concurso aún no está configurado.')));
+    } else {
+      renderFixtureCards(wrap, config, false);
+    }
     root.appendChild(wrap);
   }
 
@@ -803,39 +997,79 @@ async function renderPlayerApp() {
       wrap.appendChild(progWrap);
     }
 
-    // group filter
-    const groups = ['all', ...new Set(config.matches.map(id => MATCHES.find(m=>m.id===id)?.group).filter(Boolean)).values()].sort((a,b)=>a==='all'?-1:a.localeCompare(b));
-    const gf = el('div', { class:'group-filter' });
-    groups.forEach(g => {
-      const btn = el('button', { class: activeGroup===g ? 'gchip on' : 'gchip off' }, g==='all'?'Todos':`G ${g}`);
-      btn.addEventListener('click', () => { activeGroup=g; renderPredictions(); });
-      gf.appendChild(btn);
-    });
-    wrap.appendChild(gf);
+    // puntos acumulados hasta ahora
+    const ptsActuales = calcPoints(predictions, config.actuals || {}, config.matches);
+    const matchesConResultado = config.matches.filter(id => {
+      const a = config.actuals?.[id];
+      return a && typeof a.home === 'number';
+    }).length;
+    if (matchesConResultado > 0) {
+      const ptsBanner = el('div', { style:{
+        background:'rgba(255,255,255,0.12)', borderRadius:'12px', padding:'12px 16px',
+        marginBottom:'14px', display:'flex', justifyContent:'space-between', alignItems:'center'
+      }});
+      ptsBanner.appendChild(el('span', { style:{color:'rgba(255,255,255,0.85)',fontSize:'13px'} },
+        `🏅 Puntos acumulados (${matchesConResultado} partidos jugados)`));
+      ptsBanner.appendChild(el('span', { style:{color:'#fbbf24',fontSize:'22px',fontWeight:900} },
+        `${ptsActuales} pts`));
+      wrap.appendChild(ptsBanner);
+    }
 
-    // match cards
-    const matchesToShow = config.matches.filter(id => {
-      const m = MATCHES.find(m=>m.id===id);
-      return m && (activeGroup==='all' || m.group===activeGroup);
+    // solo mostrar partidos SIN resultado aún (pendientes de predicción)
+    const matchesPendientes = config.matches.filter(id => {
+      const a = config.actuals?.[id];
+      return !(a && typeof a.home === 'number');
     });
 
-    matchesToShow.forEach(id => {
+    if (matchesPendientes.length === 0) {
+      wrap.appendChild(el('div', { class:'card' },
+        el('p', { style:{textAlign:'center',color:'var(--muted)',padding:'12px'} },
+          '✅ Todos los partidos ya tienen resultado. ¡Revisa tu puntaje en la tabla!')));
+    } else {
+      const pendLabel = el('div', { style:{color:'rgba(255,255,255,0.7)',fontSize:'12px',fontWeight:700,marginBottom:'8px'} },
+        `📋 Partidos pendientes de predicción (${matchesPendientes.length})`);
+      wrap.appendChild(pendLabel);
+    }
+
+    matchesPendientes.forEach(id => {
       const match = MATCHES.find(m=>m.id===id);
       if (!match) return;
-      const actual = config.actuals?.[id];
-      const hasActual = actual && typeof actual.home === 'number';
-      const locked = hasActual || config.status === 'closed';
+      const locked = config.status === 'closed';
       const card = makeMatchCard(
         match,
         predictions[id] || { home:'', away:'' },
         locked ? null : (val) => { predictions[id] = val; },
-        hasActual ? actual : null,
-        null,
-        false,
-        locked
+        null, null, false, locked
       );
       wrap.appendChild(card);
     });
+
+    // partidos ya jugados (colapsados, solo puntos)
+    const matchesJugados = config.matches.filter(id => {
+      const a = config.actuals?.[id];
+      return a && typeof a.home === 'number';
+    });
+    if (matchesJugados.length > 0) {
+      const togBtn = el('button', { class:'btn btn-ghost', style:{marginTop:'4px',marginBottom:'8px',fontSize:'13px'} },
+        `📂 Ver ${matchesJugados.length} partidos ya jugados`);
+      let expanded = false;
+      const jugadosWrap = el('div', { style:{display:'none'} });
+      matchesJugados.forEach(id => {
+        const match = MATCHES.find(m=>m.id===id);
+        if (!match) return;
+        const actual = config.actuals[id];
+        jugadosWrap.appendChild(makeMatchCard(match, predictions[id], null, actual, null, false, true));
+      });
+      togBtn.addEventListener('click', () => {
+        expanded = !expanded;
+        jugadosWrap.style.display = expanded ? 'block' : 'none';
+        togBtn.textContent = expanded
+          ? `📂 Ocultar partidos jugados`
+          : `📂 Ver ${matchesJugados.length} partidos ya jugados`;
+      });
+      wrap.appendChild(togBtn);
+      wrap.appendChild(jugadosWrap);
+    }
 
     // save button
     if (config.status !== 'closed') {
@@ -867,9 +1101,13 @@ async function renderPlayerApp() {
       wrap.appendChild(saveBtn);
     }
 
-    const rankBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'24px' } }, '🏆 Ver tabla de posiciones');
+    const rankBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'8px' } }, '🏆 Ver tabla de posiciones');
     rankBtn2.addEventListener('click', () => renderRanking());
     wrap.appendChild(rankBtn2);
+
+    const fixBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'24px' } }, '🗺️ Ver fixture y clasificados');
+    fixBtn2.addEventListener('click', () => renderFixturePlayer());
+    wrap.appendChild(fixBtn2);
 
     root.appendChild(wrap);
   }

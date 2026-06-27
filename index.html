@@ -410,8 +410,60 @@ async function init() {
   if (isPlayerMode()) {
     await renderPlayerApp();
   } else {
-    await renderAdminApp();
+    await renderAdminLogin();
   }
+}
+
+async function renderAdminLogin() {
+  // Si ya está autenticado en esta sesión, ir directo al admin
+  if (sessionStorage.getItem('admin_auth') === 'ok') {
+    await renderAdminApp();
+    return;
+  }
+
+  root.innerHTML = '';
+  const wrap = el('div', { class:'wrap' });
+  wrap.appendChild(el('div', { class:'header' },
+    el('div', { class:'ball' }, '⚽'),
+    el('h1', {}, 'Concurso Mundialero Contraloría 2026'),
+    el('p', {}, 'Panel de administración')
+  ));
+
+  const card = el('div', { class:'login-card', style:{ margin:'0 auto' } });
+  card.appendChild(el('div', { style:{fontSize:'36px',marginBottom:'12px'} }, '🔐'));
+  card.appendChild(el('h2', {}, 'Acceso admin'));
+  card.appendChild(el('p', {}, 'Ingresa la clave para continuar'));
+
+  const input = el('input', {
+    class:'input', type:'password', placeholder:'Clave de administrador',
+    style:{ marginBottom:'14px', textAlign:'center', fontSize:'17px', letterSpacing:'2px' }
+  });
+  card.appendChild(input);
+
+  const errorMsg = el('div', { style:{
+    fontSize:'12px', color:'var(--red)', marginBottom:'10px',
+    minHeight:'16px', textAlign:'center'
+  }}, '');
+  card.appendChild(errorMsg);
+
+  const btn = el('button', { class:'btn btn-gold' }, 'Ingresar 🔓');
+  btn.addEventListener('click', async () => {
+    if (input.value === 'sophie.2024') {
+      sessionStorage.setItem('admin_auth', 'ok');
+      await renderAdminApp();
+    } else {
+      errorMsg.textContent = 'Clave incorrecta. Inténtalo de nuevo.';
+      input.value = '';
+      input.focus();
+    }
+  });
+  input.addEventListener('keydown', e => { if (e.key==='Enter') btn.click(); });
+  card.appendChild(btn);
+
+  const loginWrap = el('div', { class:'login-wrap' });
+  loginWrap.appendChild(card);
+  wrap.appendChild(loginWrap);
+  root.appendChild(wrap);
 }
 
 // ─── SHARED: FIXTURE ─────────────────────────────────────────────────────────

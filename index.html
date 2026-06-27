@@ -930,6 +930,10 @@ async function renderPlayerApp() {
     fixBtn0.addEventListener('click', () => renderFixturePlayer());
     card.appendChild(fixBtn0);
 
+    const ganadoresBtn0 = el('button', { class:'btn btn-ghost', style:{ marginTop:'6px', background:'transparent', border:'none', color:'var(--bright)', textDecoration:'underline', fontWeight:700 } }, '🥇 Ver ganadores del prode');
+    ganadoresBtn0.addEventListener('click', () => renderGanadores());
+    card.appendChild(ganadoresBtn0);
+
     const loginWrap = el('div', { class:'login-wrap' });
     loginWrap.appendChild(card);
     wrap.appendChild(loginWrap);
@@ -1139,9 +1143,189 @@ async function renderPlayerApp() {
     rankBtn2.addEventListener('click', () => renderRanking());
     wrap.appendChild(rankBtn2);
 
-    const fixBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'24px' } }, '🗺️ Ver fixture y clasificados');
+    const fixBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'8px' } }, '🗺️ Ver fixture y clasificados');
     fixBtn2.addEventListener('click', () => renderFixturePlayer());
     wrap.appendChild(fixBtn2);
+
+    const ganadoresBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'24px' } }, '🥇 Ver ganadores del prode');
+    ganadoresBtn2.addEventListener('click', () => renderGanadores());
+    wrap.appendChild(ganadoresBtn2);
+
+    root.appendChild(wrap);
+  }
+
+  async function renderGanadores() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '⚽'),
+      el('h1', {}, 'Concurso Mundialero Contraloría 2026'),
+      el('p', {}, '🥇 Ganadores por instancia')
+    ));
+
+    const backBtn = el('button', { class:'btn btn-ghost', style:{ marginBottom:'14px' } }, '← Volver');
+    backBtn.addEventListener('click', () => playerName ? renderPredictions() : renderLogin());
+    wrap.appendChild(backBtn);
+
+    if (!config) {
+      wrap.appendChild(el('div', { class:'card' },
+        el('p', { style:{textAlign:'center',color:'var(--muted)'} }, 'El concurso aún no está configurado.')));
+      root.appendChild(wrap);
+      return;
+    }
+
+    // Cargar todas las predicciones
+    const idx = await storageGet('players_index') || [];
+    const allPreds = [];
+    for (const name of idx) {
+      const data = await storageGet('predictions:' + name);
+      if (data) allPreds.push({ name, predictions: data.predictions || {} });
+    }
+
+    // Definir instancias y qué IDs corresponden a cada una
+    const INSTANCIAS = [
+      {
+        label: 'Fase de grupos',
+        emoji: '🏟️',
+        ids: MATCHES.filter(m => m.group !== 'R32').map(m => m.id),
+        color: '#7f1d1d',
+      },
+      {
+        label: '16vos de final',
+        emoji: '⚔️',
+        ids: MATCHES.filter(m => m.group === 'R32').map(m => m.id),
+        color: '#1e3a8a',
+      },
+      {
+        label: 'Octavos de final',
+        emoji: '🔥',
+        ids: [], // se agregarán cuando existan en MATCHES
+        color: '#065f46',
+      },
+      {
+        label: 'Cuartos de final',
+        emoji: '🌟',
+        ids: [],
+        color: '#78350f',
+      },
+    ];
+
+    // Medallas
+    const medals = ['🥇','🥈','🥉'];
+    const medalBg = ['#fef9c3','#f1f5f9','#fff7ed'];
+    const medalBorder = ['#fbbf24','#cbd5e1','#fed7aa'];
+
+    INSTANCIAS.forEach(inst => {
+      const card = el('div', { class:'card', style:{ marginBottom:'14px' } });
+
+      // Header de instancia
+      const hdr = el('div', { style:{
+        display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px',
+        paddingBottom:'10px', borderBottom:'2px solid #f0e0e0'
+      }});
+      hdr.appendChild(el('span', { style:{fontSize:'24px'} }, inst.emoji));
+      hdr.appendChild(el('span', { style:{fontSize:'15px',fontWeight:800,color:'#3b0f0f'} }, inst.label));
+      card.appendChild(hdr);
+
+      // Calcular puntos de cada jugador en esta instancia
+      const matchIds = inst.ids.filter(id => {
+        const a = config.actuals?.[id];
+        return a && typeof a.home === 'number'; // solo partidos con resultado real
+      });
+
+      if (matchIds.length === 0) {
+        card.appendChild(el('p', { style:{
+          textAlign:'center', color:'var(--muted)', fontSize:'13px',
+          padding:'16px 0', fontStyle:'italic'
+        }}, 'Aún no hay resultados disponibles para esta instancia'));
+        wrap.appendChild(card);
+        return;
+      }
+
+      // Calcular puntos por jugador
+      const scores = allPreds.map(p => ({
+        name: p.name,
+        pts: calcPoints(p.predictions, config.actuals, matchIds),
+        exact: matchIds.filter(id => {
+          const pred = p.predictions[id];
+          const act = config.actuals[id];
+          return pred && act && typeof pred.home==='number' &&
+            pred.home===act.home && pred.away===act.away;
+        }).length,
+        correct: matchIds.filter(id => {
+          const pred = p.predictions[id];
+          const act = config.actuals[id];
+          if (!pred || !act || typeof pred.home!=='number') return false;
+          const getR = (h,a) => h>a?'L':a>h?'V':'E';
+          return pred.home!==act.home || pred.away!==act.away
+            ? getR(pred.home,pred.away)===getR(act.home,act.away) : false;
+        }).length,
+      })).sort((a,b) => b.pts - a.pts || b.exact - a.exact);
+
+      if (scores.length === 0) {
+        card.appendChild(el('p', { style:{textAlign:'center',color:'var(--muted)',fontSize:'13px',padding:'12px 0'} },
+          'Nadie ha ingresado predicciones aún'));
+        wrap.appendChild(card);
+        return;
+      }
+
+      // Top 3
+      const top3 = scores.slice(0, 3);
+      top3.forEach((s, i) => {
+        const row = el('div', { style:{
+          display:'flex', alignItems:'center', gap:'12px',
+          padding:'12px 14px', borderRadius:'12px', marginBottom:'8px',
+          background: medalBg[i],
+          border: `2px solid ${medalBorder[i]}`,
+        }});
+
+        // Medalla
+        row.appendChild(el('div', { style:{
+          fontSize:'28px', lineHeight:'1', flexShrink:0, width:'36px', textAlign:'center'
+        }}, medals[i]));
+
+        // Nombre y stats
+        const info = el('div', { style:{ flex:1 } });
+        info.appendChild(el('div', { style:{
+          fontSize:'15px', fontWeight:800, color:'#1a2a5e', marginBottom:'3px'
+        }}, s.name));
+        const stats = el('div', { style:{ fontSize:'11px', color:'var(--muted)', display:'flex', gap:'10px' } });
+        stats.appendChild(el('span', {}, `✅ ${s.exact} exactos`));
+        stats.appendChild(el('span', {}, `☑️ ${s.correct} resultados`));
+        stats.appendChild(el('span', {}, `📋 ${matchIds.length} partidos`));
+        info.appendChild(stats);
+        row.appendChild(info);
+
+        // Puntos
+        const ptsBox = el('div', { style:{
+          textAlign:'center', flexShrink:0
+        }});
+        ptsBox.appendChild(el('div', { style:{
+          fontSize:'26px', fontWeight:900,
+          color: i===0 ? '#d97706' : i===1 ? '#64748b' : '#c2410c'
+        }}, String(s.pts)));
+        ptsBox.appendChild(el('div', { style:{fontSize:'10px',color:'var(--muted)',fontWeight:700} }, 'pts'));
+        row.appendChild(ptsBox);
+
+        card.appendChild(row);
+      });
+
+      // Resumen total de partidos jugados
+      card.appendChild(el('p', { style:{
+        fontSize:'11px', color:'var(--muted)', textAlign:'right', marginTop:'6px'
+      }}, `Basado en ${matchIds.length} de ${inst.ids.length} partidos jugados`));
+
+      wrap.appendChild(card);
+    });
+
+    // Nota al pie
+    const nota = el('div', { style:{
+      background:'rgba(255,255,255,0.1)', borderRadius:'12px',
+      padding:'12px 16px', marginBottom:'24px',
+      fontSize:'12px', color:'rgba(255,255,255,0.7)', textAlign:'center'
+    }});
+    nota.appendChild(document.createTextNode('En caso de empate en puntos, gana quien tenga más marcadores exactos'));
+    wrap.appendChild(nota);
 
     root.appendChild(wrap);
   }

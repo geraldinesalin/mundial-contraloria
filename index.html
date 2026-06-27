@@ -626,6 +626,14 @@ async function renderRankingCards(wrap, config, opts={}) {
 // ═══════════════════════════════════════════════════════════════════════════════
 async function renderAdminApp() {
   let config = await storageGet('config') || { matches: MATCHES.map(m=>m.id), status:'open', actuals:{} };
+
+  // Asegurar que todos los partidos del array MATCHES estén en config.matches (sin duplicados)
+  const allIds = MATCHES.map(m=>m.id);
+  const merged = [...new Set([...(config.matches||[]), ...allIds])];
+  if (merged.length !== (config.matches||[]).length) {
+    config.matches = merged;
+    await storageSet('config', config);
+  }
   let activeTab = 'setup';
   let activeGroup = 'all';
 
@@ -657,13 +665,11 @@ async function renderAdminApp() {
     });
     wrap.appendChild(tabs);
 
-    if (activeTab === 'setup') renderSetup(wrap);
-    else if (activeTab === 'qr') renderQR(wrap);
-    else if (activeTab === 'results') renderResults(wrap);
-    else if (activeTab === 'fixture') renderFixture(wrap);
-    else if (activeTab === 'tabla') renderTabla(wrap);
-
-    root.appendChild(wrap);
+    if (activeTab === 'setup') { renderSetup(wrap); root.appendChild(wrap); }
+    else if (activeTab === 'qr') { renderQR(wrap); root.appendChild(wrap); }
+    else if (activeTab === 'results') { renderResults(wrap); root.appendChild(wrap); }
+    else if (activeTab === 'fixture') { root.appendChild(wrap); renderFixture(wrap); }
+    else if (activeTab === 'tabla') { root.appendChild(wrap); renderTabla(wrap); }
   }
 
   // ── SETUP TAB ──
@@ -820,7 +826,10 @@ async function renderAdminApp() {
   }
 
   // ── FIXTURE TAB ──
-  function renderFixture(wrap) {
+  async function renderFixture(wrap) {
+    // Recargar config fresco desde Firebase para tener datos actualizados
+    const freshConfig = await storageGet('config');
+    if (freshConfig) config = freshConfig;
     renderFixtureCards(wrap, config, true);
   }
 

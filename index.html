@@ -232,22 +232,22 @@ const MATCHES = [
   { id:71, group:"L", home:"Panamá",          away:"Inglaterra",       date:"27 Jun", f1:"🇵🇦", f2:"🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
   { id:72, group:"L", home:"Croacia",         away:"Ghana",            date:"27 Jun", f1:"🇭🇷", f2:"🇬🇭" },
   // ── RONDA DE 32 (16vos de final) ──
-  { id:73, group:"R32", home:"Sudáfrica",       away:"Canadá",           date:"28 Jun", f1:"🇿🇦", f2:"🇨🇦" },
-  { id:74, group:"R32", home:"Brasil",           away:"Japón",            date:"29 Jun", f1:"🇧🇷", f2:"🇯🇵" },
-  { id:75, group:"R32", home:"Alemania",         away:"Paraguay",         date:"29 Jun", f1:"🇩🇪", f2:"🇵🇾" },
-  { id:76, group:"R32", home:"Países Bajos",     away:"Marruecos",        date:"29 Jun", f1:"🇳🇱", f2:"🇲🇦" },
-  { id:77, group:"R32", home:"Francia",          away:"Suecia",           date:"30 Jun", f1:"🇫🇷", f2:"🇸🇪" },
-  { id:78, group:"R32", home:"Costa de Marfil",  away:"Noruega",          date:"30 Jun", f1:"🇨🇮", f2:"🇳🇴" },
-  { id:79, group:"R32", home:"México",           away:"Por definir (3°)", date:"30 Jun", f1:"🇲🇽", f2:"❓" },
-  { id:80, group:"R32", home:"EE.UU.",           away:"Bosnia y Herz.",   date:"1 Jul",  f1:"🇺🇸", f2:"🇧🇦" },
-  { id:81, group:"R32", home:"Bélgica",          away:"Por definir (3°)", date:"1 Jul",  f1:"🇧🇪", f2:"❓" },
-  { id:82, group:"R32", home:"Por definir (1°L)",away:"Por definir (3°)", date:"1 Jul",  f1:"❓",  f2:"❓" },
-  { id:83, group:"R32", home:"España",           away:"Por definir (2°J)",date:"2 Jul",  f1:"🇪🇸", f2:"❓" },
-  { id:84, group:"R32", home:"Por definir (2°K)",away:"Por definir (2°L)",date:"2 Jul",  f1:"❓",  f2:"❓" },
-  { id:85, group:"R32", home:"Suiza",            away:"Por definir (3°)", date:"2 Jul",  f1:"🇨🇭", f2:"❓" },
-  { id:86, group:"R32", home:"Australia",        away:"Egipto",           date:"3 Jul",  f1:"🇦🇺", f2:"🇪🇬" },
-  { id:87, group:"R32", home:"Argentina",        away:"Cabo Verde",       date:"3 Jul",  f1:"🇦🇷", f2:"🇨🇻" },
-  { id:88, group:"R32", home:"Por definir (1°K)",away:"Por definir (3°)", date:"3 Jul",  f1:"❓",  f2:"❓" },
+  { id:73, group:"R32", home:"Sudáfrica",       away:"Canadá",            date:"28 Jun", f1:"🇿🇦", f2:"🇨🇦" },
+  { id:74, group:"R32", home:"Brasil",           away:"Japón",             date:"29 Jun", f1:"🇧🇷", f2:"🇯🇵" },
+  { id:75, group:"R32", home:"Alemania",         away:"Paraguay",          date:"29 Jun", f1:"🇩🇪", f2:"🇵🇾" },
+  { id:76, group:"R32", home:"Países Bajos",     away:"Marruecos",         date:"30 Jun", f1:"🇳🇱", f2:"🇲🇦" },
+  { id:77, group:"R32", home:"Costa de Marfil",  away:"Noruega",           date:"30 Jun", f1:"🇨🇮", f2:"🇳🇴" },
+  { id:78, group:"R32", home:"Francia",          away:"Suecia",            date:"30 Jun", f1:"🇫🇷", f2:"🇸🇪" },
+  { id:79, group:"R32", home:"México",           away:"Ecuador",           date:"1 Jul",  f1:"🇲🇽", f2:"🇪🇨" },
+  { id:80, group:"R32", home:"Inglaterra",       away:"R.D. Congo",        date:"1 Jul",  f1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", f2:"🇨🇩" },
+  { id:81, group:"R32", home:"Bélgica",          away:"Por definir (3°)",  date:"1 Jul",  f1:"🇧🇪", f2:"❓" },
+  { id:82, group:"R32", home:"EE.UU.",           away:"Bosnia y Herz.",    date:"2 Jul",  f1:"🇺🇸", f2:"🇧🇦" },
+  { id:83, group:"R32", home:"España",           away:"Por definir (2°J)", date:"2 Jul",  f1:"🇪🇸", f2:"❓" },
+  { id:84, group:"R32", home:"Suiza",            away:"Por definir (3°)",  date:"2 Jul",  f1:"🇨🇭", f2:"❓" },
+  { id:85, group:"R32", home:"Portugal",         away:"Croacia",           date:"3 Jul",  f1:"🇵🇹", f2:"🇭🇷" },
+  { id:86, group:"R32", home:"Australia",        away:"Egipto",            date:"3 Jul",  f1:"🇦🇺", f2:"🇪🇬" },
+  { id:87, group:"R32", home:"Argentina",        away:"Cabo Verde",        date:"3 Jul",  f1:"🇦🇷", f2:"🇨🇻" },
+  { id:88, group:"R32", home:"Colombia",         away:"Ghana",             date:"4 Jul",  f1:"🇨🇴", f2:"🇬🇭" },
 ];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -472,22 +472,22 @@ function renderFixtureCards(wrap, config, isAdmin) {
 
   // Bracket oficial Ronda de 32 (fuente: FIFA/Sky Sports/FOX Sports, 27 jun 2026)
   const R32 = [
-    { date:'28 Jun', venue:'SoFi (LA)',      h:{f:'🇿🇦',n:'Sudáfrica'},     a:{f:'🇨🇦',n:'Canadá'},         confirmed:true,  score:null },
-    { date:'29 Jun', venue:'Houston',        h:{f:'🇧🇷',n:'Brasil'},          a:{f:'🇯🇵',n:'Japón'},           confirmed:true,  score:null },
-    { date:'29 Jun', venue:'Boston',         h:{f:'🇩🇪',n:'Alemania'},        a:{f:'🇵🇾',n:'Paraguay'},        confirmed:true,  score:null },
-    { date:'29 Jun', venue:'Monterrey',      h:{f:'🇳🇱',n:'Países Bajos'},    a:{f:'🇲🇦',n:'Marruecos'},      confirmed:true,  score:null },
-    { date:'30 Jun', venue:'NY/NJ',          h:{f:'🇫🇷',n:'Francia'},         a:{f:'🇸🇪',n:'Suecia'},          confirmed:true,  score:null },
-    { date:'30 Jun', venue:'Dallas',         h:{f:'🇨🇮',n:'Costa de Marfil'}, a:{f:'🇳🇴',n:'Noruega'},        confirmed:true,  score:null },
-    { date:'30 Jun', venue:'Ciudad de Méx.', h:{f:'🇲🇽',n:'México'},          a:{f:'❓',n:'3° Grupo C/E/F/H/I'}, confirmed:false, score:null },
-    { date:'1 Jul',  venue:'Atlanta',        h:{f:'🇺🇸',n:'EE.UU.'},          a:{f:'🇧🇦',n:'Bosnia y Herz.'}, confirmed:true,  score:null },
-    { date:'1 Jul',  venue:'Seattle',        h:{f:'🇧🇪',n:'Bélgica'},         a:{f:'❓',n:'3° Grupo A/I/J'},   confirmed:false, score:null },
-    { date:'1 Jul',  venue:'Toronto',        h:{f:'❓',n:'1° Grupo L'},        a:{f:'❓',n:'3° Grupo E/H/I/J/K'}, confirmed:false, score:null },
-    { date:'2 Jul',  venue:'Los Ángeles',    h:{f:'🇪🇸',n:'España'},           a:{f:'❓',n:'2° Grupo J'},       confirmed:false, score:null },
-    { date:'2 Jul',  venue:'Toronto',        h:{f:'❓',n:'2° Grupo K'},        a:{f:'❓',n:'2° Grupo L'},       confirmed:false, score:null },
-    { date:'2 Jul',  venue:'Vancouver',      h:{f:'🇨🇭',n:'Suiza'},            a:{f:'❓',n:'3° Grupo E/F/G/I/J'}, confirmed:false, score:null },
-    { date:'3 Jul',  venue:'Dallas',         h:{f:'🇦🇺',n:'Australia'},        a:{f:'🇪🇬',n:'Egipto'},          confirmed:true,  score:null },
-    { date:'3 Jul',  venue:'Miami',          h:{f:'🇦🇷',n:'Argentina'},        a:{f:'🇨🇻',n:'Cabo Verde'},      confirmed:true,  score:null },
-    { date:'3 Jul',  venue:'Por confirmar',  h:{f:'❓',n:'1° Grupo K'},        a:{f:'❓',n:'3° Grupo D/E/I/J/L'}, confirmed:false, score:null },
+    { date:'28 Jun', venue:'SoFi (LA)',      h:{f:'🇿🇦',n:'Sudáfrica'},      a:{f:'🇨🇦',n:'Canadá'},            confirmed:true,  score:null },
+    { date:'29 Jun', venue:'Houston',        h:{f:'🇧🇷',n:'Brasil'},           a:{f:'🇯🇵',n:'Japón'},             confirmed:true,  score:null },
+    { date:'29 Jun', venue:'Foxborough',     h:{f:'🇩🇪',n:'Alemania'},         a:{f:'🇵🇾',n:'Paraguay'},          confirmed:true,  score:null },
+    { date:'30 Jun', venue:'Monterrey',      h:{f:'🇳🇱',n:'Países Bajos'},     a:{f:'🇲🇦',n:'Marruecos'},        confirmed:true,  score:null },
+    { date:'30 Jun', venue:'Dallas',         h:{f:'🇨🇮',n:'Costa de Marfil'},  a:{f:'🇳🇴',n:'Noruega'},          confirmed:true,  score:null },
+    { date:'30 Jun', venue:'New Jersey',     h:{f:'🇫🇷',n:'Francia'},          a:{f:'🇸🇪',n:'Suecia'},            confirmed:true,  score:null },
+    { date:'1 Jul',  venue:'Ciudad de Méx.', h:{f:'🇲🇽',n:'México'},          a:{f:'🇪🇨',n:'Ecuador'},           confirmed:true,  score:null },
+    { date:'1 Jul',  venue:'Atlanta',        h:{f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',n:'Inglaterra'},       a:{f:'🇨🇩',n:'R.D. Congo'},       confirmed:true,  score:null },
+    { date:'1 Jul',  venue:'Seattle',        h:{f:'🇧🇪',n:'Bélgica'},          a:{f:'❓',n:'3° (A/E/H/I/J)'},    confirmed:false, score:null },
+    { date:'2 Jul',  venue:'Santa Clara',    h:{f:'🇺🇸',n:'EE.UU.'},           a:{f:'🇧🇦',n:'Bosnia y Herz.'},   confirmed:true,  score:null },
+    { date:'2 Jul',  venue:'Los Ángeles',    h:{f:'🇪🇸',n:'España'},            a:{f:'❓',n:'2° Grupo J (Austria o Argelia)'}, confirmed:false, score:null },
+    { date:'2 Jul',  venue:'Vancouver',      h:{f:'🇨🇭',n:'Suiza'},             a:{f:'❓',n:'3° (E/F/G/I/J)'},    confirmed:false, score:null },
+    { date:'3 Jul',  venue:'Toronto',        h:{f:'🇵🇹',n:'Portugal'},          a:{f:'🇭🇷',n:'Croacia'},           confirmed:true,  score:null },
+    { date:'3 Jul',  venue:'Dallas',         h:{f:'🇦🇺',n:'Australia'},         a:{f:'🇪🇬',n:'Egipto'},            confirmed:true,  score:null },
+    { date:'3 Jul',  venue:'Miami',          h:{f:'🇦🇷',n:'Argentina'},         a:{f:'🇨🇻',n:'Cabo Verde'},        confirmed:true,  score:null },
+    { date:'4 Jul',  venue:'Kansas City',    h:{f:'🇨🇴',n:'Colombia'},          a:{f:'🇬🇭',n:'Ghana'},             confirmed:true,  score:null },
   ];
 
   // Grupos calculados desde resultados
@@ -728,7 +728,7 @@ async function renderAdminApp() {
 
     // tabs
     const tabs = el('div', { class:'tabs' });
-    [['setup','⚙️ Config'],['qr','📱 QR'],['results','📋 Resultados'],['fixture','🗺️ Fixture'],['tabla','🏆 Tabla']].forEach(([id,label]) => {
+    [['setup','⚙️ Config'],['results','📋 Resultados'],['fixture','🗺️ Fixture'],['tabla','🏆 Tabla']].forEach(([id,label]) => {
       const t = el('button', { class: activeTab===id ? 'tab active' : 'tab' }, label);
       t.addEventListener('click', () => { activeTab=id; render(); });
       tabs.appendChild(t);
@@ -736,7 +736,6 @@ async function renderAdminApp() {
     wrap.appendChild(tabs);
 
     if (activeTab === 'setup') { renderSetup(wrap); root.appendChild(wrap); }
-    else if (activeTab === 'qr') { renderQR(wrap); root.appendChild(wrap); }
     else if (activeTab === 'results') { renderResults(wrap); root.appendChild(wrap); }
     else if (activeTab === 'fixture') { root.appendChild(wrap); renderFixture(wrap); }
     else if (activeTab === 'tabla') { root.appendChild(wrap); renderTabla(wrap); }

@@ -369,8 +369,15 @@ function makeMatchCard(match, pred, onPred, actual, onActual, showActualInput, r
   teamL.appendChild(el('div', { class:'team-name' }, match.home));
 
   const scoreBox = el('div', { class:'score-box' });
-  const inputH = makeScoreInput(pred?.home ?? '', v => onPred && onPred({ ...pred, home: typeof v === 'number' ? v : '' }), readOnly);
-  const inputA = makeScoreInput(pred?.away ?? '', v => onPred && onPred({ ...pred, away: typeof v === 'number' ? v : '' }), readOnly);
+  const localPred = { home: pred?.home ?? '', away: pred?.away ?? '' };
+  const inputH = makeScoreInput(localPred.home, v => {
+    localPred.home = v;
+    onPred && onPred({ ...localPred });
+  }, readOnly);
+  const inputA = makeScoreInput(localPred.away, v => {
+    localPred.away = v;
+    onPred && onPred({ ...localPred });
+  }, readOnly);
   scoreBox.appendChild(inputH);
   scoreBox.appendChild(el('span', { class:'score-sep' }, '–'));
   scoreBox.appendChild(inputA);
@@ -389,8 +396,15 @@ function makeMatchCard(match, pred, onPred, actual, onActual, showActualInput, r
     const divider = el('div', { style:{ borderTop:'1px solid var(--border)', marginTop:'10px', paddingTop:'10px' } });
     const lbl = el('div', { class:'section-label', style:{ textAlign:'center', marginBottom:'6px' } }, 'RESULTADO REAL');
     const realBox = el('div', { class:'score-box', style:{ justifyContent:'center' } });
-    const rH = makeScoreInput(actual?.home ?? '', v => onActual && onActual({ ...actual, home: typeof v === 'number' ? v : '' }));
-    const rA = makeScoreInput(actual?.away ?? '', v => onActual && onActual({ ...actual, away: typeof v === 'number' ? v : '' }));
+    const localActual = { home: actual?.home ?? '', away: actual?.away ?? '' };
+    const rH = makeScoreInput(localActual.home, v => {
+      localActual.home = v;
+      onActual && onActual({ ...localActual });
+    });
+    const rA = makeScoreInput(localActual.away, v => {
+      localActual.away = v;
+      onActual && onActual({ ...localActual });
+    });
     realBox.appendChild(rH);
     realBox.appendChild(el('span', { class:'score-sep' }, '–'));
     realBox.appendChild(rA);

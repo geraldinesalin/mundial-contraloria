@@ -1441,9 +1441,18 @@ async function renderTriviaApp() {
     card.appendChild(input);
 
     const btn = el('button', { class:'btn btn-gold', style:{marginTop:'4px'} }, 'Comenzar 🚀');
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const name = input.value.trim();
       if (!name) { showToast('Ingresa tu nombre'); return; }
+      btn.disabled = true;
+      btn.textContent = 'Verificando…';
+      const existing = await storageGet('trivia:' + name);
+      if (existing && typeof existing.score === 'number') {
+        playerName = name;
+        answers.splice(0, answers.length, ...existing.answers);
+        renderResults(existing.score, true);
+        return;
+      }
       playerName = name;
       renderQuestions();
     });
@@ -1522,7 +1531,7 @@ async function renderTriviaApp() {
     updateProgress();
   }
 
-  function renderResults(score) {
+  function renderResults(score, alreadyPlayed) {
     root.innerHTML = '';
     const wrap = el('div', { class:'wrap' });
     wrap.appendChild(el('div', { class:'header' },
@@ -1530,6 +1539,15 @@ async function renderTriviaApp() {
       el('h1', {}, 'Trivia Mundialera'),
       el('p', {}, `Resultado de ${playerName}`)
     ));
+
+    if (alreadyPlayed) {
+      const already = el('div', { style:{
+        background:'rgba(255,255,255,0.12)', border:'1.5px solid rgba(255,255,255,0.25)',
+        borderRadius:'12px', padding:'10px 14px', marginBottom:'14px',
+        fontSize:'12px', color:'#fca5a5', textAlign:'center', fontWeight:700
+      }}, 'Ya respondiste esta trivia. Este fue tu resultado, no se puede volver a jugar.');
+      wrap.appendChild(already);
+    }
 
     let msg, sub;
     if (score === TRIVIA_QUESTIONS.length) { msg = '¡Nivel Balón de Oro!'; sub = 'Te sabes el Mundial de memoria.'; }
@@ -1580,12 +1598,14 @@ async function renderTriviaApp() {
     rankBtn.addEventListener('click', () => renderRanking(score));
     wrap.appendChild(rankBtn);
 
-    const retryBtn = el('button', { class:'btn btn-ghost', style:{ marginTop:'0', marginBottom:'20px' } }, 'Jugar de nuevo');
-    retryBtn.addEventListener('click', () => {
-      answers.fill(null);
-      renderLogin();
-    });
-    wrap.appendChild(retryBtn);
+    if (!alreadyPlayed) {
+      const retryBtn = el('button', { class:'btn btn-ghost', style:{ marginTop:'0', marginBottom:'20px' } }, 'Jugar de nuevo');
+      retryBtn.addEventListener('click', () => {
+        answers.fill(null);
+        renderLogin();
+      });
+      wrap.appendChild(retryBtn);
+    }
 
     root.appendChild(wrap);
   }

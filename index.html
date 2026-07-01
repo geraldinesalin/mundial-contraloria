@@ -1576,12 +1576,72 @@ async function renderTriviaApp() {
       wrap.appendChild(card);
     });
 
-    const retryBtn = el('button', { class:'btn btn-ghost', style:{ marginTop:'6px', marginBottom:'20px' } }, 'Jugar de nuevo');
+    const rankBtn = el('button', { class:'btn btn-gold', style:{ marginTop:'6px', marginBottom:'10px' } }, '🏆 Ver cómo van los demás');
+    rankBtn.addEventListener('click', () => renderRanking(score));
+    wrap.appendChild(rankBtn);
+
+    const retryBtn = el('button', { class:'btn btn-ghost', style:{ marginTop:'0', marginBottom:'20px' } }, 'Jugar de nuevo');
     retryBtn.addEventListener('click', () => {
       answers.fill(null);
       renderLogin();
     });
     wrap.appendChild(retryBtn);
+
+    root.appendChild(wrap);
+  }
+
+  async function renderRanking(lastScore) {
+    root.innerHTML = '<div class="loading"><span class="spin">⚽</span> Cargando…</div>';
+    const idx = await storageGet('trivia_players_index') || [];
+    const all = [];
+    for (const name of idx) {
+      const data = await storageGet('trivia:' + name);
+      if (data && typeof data.score === 'number') all.push({ name: data.name, score: data.score });
+    }
+    all.sort((a, b) => b.score - a.score);
+
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '🏆'),
+      el('h1', {}, 'Ranking de la trivia'),
+      el('p', {}, `${all.length} jugador${all.length===1?'':'es'} han respondido`)
+    ));
+
+    if (all.length === 0) {
+      const card = el('div', { class:'card' });
+      card.appendChild(el('p', { style:{ textAlign:'center', color:'var(--muted)', padding:'12px 0' } }, 'Todavía nadie más ha jugado la trivia'));
+      wrap.appendChild(card);
+    } else {
+      const topScore = all[0].score;
+      const card = el('div', { class:'card' });
+      all.forEach((p, i) => {
+        const isWinner = p.score === topScore;
+        const row = el('div', { class: 'rank-row' + (isWinner ? ' first' : '') });
+        row.appendChild(el('div', { class:'rank-medal' }, isWinner ? '🥇' : String(i + 1)));
+        row.appendChild(el('div', { class:'rank-name' }, p.name));
+        const ptsBox = el('div', { class:'rank-pts' }, String(p.score));
+        ptsBox.appendChild(el('span', {}, `/${TRIVIA_QUESTIONS.length}`));
+        row.appendChild(ptsBox);
+        card.appendChild(row);
+      });
+      wrap.appendChild(card);
+
+      const tiedWinners = all.filter(p => p.score === topScore).map(p => p.name);
+      const nota = el('div', { style:{
+        background:'rgba(255,255,255,0.1)', borderRadius:'12px',
+        padding:'12px 16px', marginBottom:'20px',
+        fontSize:'12px', color:'rgba(255,255,255,0.7)', textAlign:'center'
+      }});
+      nota.textContent = tiedWinners.length > 1
+        ? `Empate en el primer lugar: ${tiedWinners.join(', ')}`
+        : `Va ganando: ${tiedWinners[0]}`;
+      wrap.appendChild(nota);
+    }
+
+    const backBtn = el('button', { class:'btn btn-ghost', style:{ marginBottom:'20px' } }, '← Volver');
+    backBtn.addEventListener('click', () => lastScore != null ? renderResults(lastScore) : renderLogin());
+    wrap.appendChild(backBtn);
 
     root.appendChild(wrap);
   }

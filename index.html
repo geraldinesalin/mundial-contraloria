@@ -250,6 +250,20 @@ const MATCHES = [
   { id:88, group:"R32", home:"Colombia",         away:"Ghana",             date:"4 Jul",  f1:"🇨🇴", f2:"🇬🇭" },
 ];
 
+// ─── TRIVIA MUNDIALERA (sección oculta, ?mode=trivia) ────────────────────────
+const TRIVIA_QUESTIONS = [
+  { q:"¿Qué país ha ganado más Copas del Mundo?", opts:["Alemania","Brasil","Argentina","Italia"], a:1 },
+  { q:"El Mundial 2026 se juega en 3 países. ¿Cuáles son?", opts:["España, Portugal, Marruecos","Estados Unidos, México, Canadá","Argentina, Uruguay, Chile","Qatar, Arabia Saudita, EAU"], a:1 },
+  { q:"¿Cuántos equipos participan por primera vez en el Mundial 2026?", opts:["32","40","48","64"], a:2 },
+  { q:"¿Quién ganó el Mundial de Qatar 2022?", opts:["Francia","Brasil","Argentina","Croacia"], a:2 },
+  { q:"¿Quién es el máximo goleador histórico en Copas del Mundo?", opts:["Pelé","Miroslav Klose","Lionel Messi","Ronaldo Nazário"], a:1 },
+  { q:"¿En qué año se jugó el primer Mundial de fútbol?", opts:["1930","1926","1934","1950"], a:0 },
+  { q:"¿Cuál es el estadio más grande confirmado para el Mundial 2026?", opts:["Rose Bowl","MetLife Stadium","Estadio Azteca","AT&T Stadium"], a:3 },
+  { q:"¿Qué selección tiene el apodo de 'La Roja'?", opts:["Chile","España","Portugal","Bélgica"], a:0 },
+  { q:"¿Cuántas veces fue campeón Brasil?", opts:["3","4","5","6"], a:2 },
+  { q:"¿Qué jugador ganó el Balón de Oro del Mundial 2022 (mejor jugador del torneo)?", opts:["Kylian Mbappé","Lionel Messi","Luka Modrić","Antoine Griezmann"], a:1 },
+];
+
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -274,6 +288,9 @@ function calcPoints(preds, actuals, matchIds) {
 
 function isPlayerMode() {
   try { return new URLSearchParams(window.location.search).get('mode') === 'player'; } catch(e) { return false; }
+}
+function isTriviaMode() {
+  try { return new URLSearchParams(window.location.search).get('mode') === 'trivia'; } catch(e) { return false; }
 }
 
 // ─── FIREBASE STORAGE HELPERS ────────────────────────────────────────────────
@@ -421,7 +438,9 @@ const root = document.getElementById('root');
 
 async function init() {
   root.innerHTML = '<div class="loading"><span class="spin">⚽</span> Cargando…</div>';
-  if (isPlayerMode()) {
+  if (isTriviaMode()) {
+    await renderTriviaApp();
+  } else if (isPlayerMode()) {
     await renderPlayerApp();
   } else {
     await renderAdminLogin();
@@ -1396,6 +1415,177 @@ async function renderPlayerApp() {
   }
 
   await loadConfig();
+  renderLogin();
+}
+
+// ─── TRIVIA APP (?mode=trivia) ────────────────────────────────────────────────
+async function renderTriviaApp() {
+  let playerName = '';
+  const answers = new Array(TRIVIA_QUESTIONS.length).fill(null);
+
+  function renderLogin() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '🧠'),
+      el('h1', {}, 'Trivia Mundialera'),
+      el('p', {}, 'Concurso Mundialero Contraloría 2026')
+    ));
+
+    const card = el('div', { class:'login-card', style:{ margin:'0 auto' } });
+    card.appendChild(el('div', { style:{fontSize:'40px',marginBottom:'12px'} }, '⚽'));
+    card.appendChild(el('h2', {}, '¿Cómo te llamas?'));
+    card.appendChild(el('p', {}, '10 preguntas mundialeras. Al final ves tu puntaje y cuáles acertaste'));
+
+    const input = el('input', { class:'input', type:'text', placeholder:'Tu nombre o apodo', style:{marginBottom:'14px',textAlign:'center',fontSize:'17px'} });
+    card.appendChild(input);
+
+    const btn = el('button', { class:'btn btn-gold', style:{marginTop:'4px'} }, 'Comenzar 🚀');
+    btn.addEventListener('click', () => {
+      const name = input.value.trim();
+      if (!name) { showToast('Ingresa tu nombre'); return; }
+      playerName = name;
+      renderQuestions();
+    });
+    input.addEventListener('keydown', e => { if (e.key==='Enter') btn.click(); });
+    card.appendChild(btn);
+
+    const loginWrap = el('div', { class:'login-wrap' });
+    loginWrap.appendChild(card);
+    wrap.appendChild(loginWrap);
+    root.appendChild(wrap);
+  }
+
+  function renderQuestions() {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '🧠'),
+      el('h1', {}, 'Trivia Mundialera'),
+      el('p', {}, `Vamos, ${playerName} · Elige una opción por pregunta`)
+    ));
+
+    const progTrack = el('div', { class:'prog-track' });
+    const progFill = el('div', { class:'prog-fill', style:{ width:'0%' } });
+    progTrack.appendChild(progFill);
+    wrap.appendChild(progTrack);
+
+    function updateProgress() {
+      const answered = answers.filter(a => a !== null).length;
+      progFill.style.width = Math.round(answered / TRIVIA_QUESTIONS.length * 100) + '%';
+    }
+
+    TRIVIA_QUESTIONS.forEach((item, qi) => {
+      const card = el('div', { class:'card' });
+      card.appendChild(el('h2', {}, `${qi+1}. ${item.q}`));
+      const optsWrap = el('div', {});
+      const optBtns = [];
+      item.opts.forEach((opt, oi) => {
+        const optBtn = el('button', { class:'btn btn-ghost', style:{
+          marginBottom:'8px', textAlign:'left', color:'var(--text)',
+          background:'var(--bg-light)', border:'2px solid var(--border)'
+        }}, opt);
+        optBtn.addEventListener('click', () => {
+          answers[qi] = oi;
+          optBtns.forEach((b, bi) => {
+            b.style.background = bi === oi ? '#fff0f0' : 'var(--bg-light)';
+            b.style.borderColor = bi === oi ? 'var(--bright)' : 'var(--border)';
+          });
+          updateProgress();
+        });
+        optBtns.push(optBtn);
+        optsWrap.appendChild(optBtn);
+      });
+      card.appendChild(optsWrap);
+      wrap.appendChild(card);
+    });
+
+    const submitBtn = el('button', { class:'btn btn-gold', style:{ marginTop:'6px', marginBottom:'20px' } }, 'Enviar respuestas ✅');
+    submitBtn.addEventListener('click', async () => {
+      const pending = answers.filter(a => a === null).length;
+      if (pending > 0) { showToast(`Te faltan ${pending} pregunta${pending>1?'s':''} por responder`); return; }
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Guardando…';
+      const score = answers.filter((a, qi) => a === TRIVIA_QUESTIONS[qi].a).length;
+      try {
+        await storageSet('trivia:' + playerName, {
+          name: playerName, answers, score, submittedAt: Date.now()
+        });
+        let idx = await storageGet('trivia_players_index') || [];
+        if (!idx.includes(playerName)) { idx.push(playerName); await storageSet('trivia_players_index', idx); }
+      } catch(e) { console.error(e); }
+      renderResults(score);
+    });
+    wrap.appendChild(submitBtn);
+
+    root.appendChild(wrap);
+    updateProgress();
+  }
+
+  function renderResults(score) {
+    root.innerHTML = '';
+    const wrap = el('div', { class:'wrap' });
+    wrap.appendChild(el('div', { class:'header' },
+      el('div', { class:'ball' }, '🏆'),
+      el('h1', {}, 'Trivia Mundialera'),
+      el('p', {}, `Resultado de ${playerName}`)
+    ));
+
+    let msg, sub;
+    if (score === TRIVIA_QUESTIONS.length) { msg = '¡Nivel Balón de Oro!'; sub = 'Te sabes el Mundial de memoria.'; }
+    else if (score >= 7) { msg = '¡Nivel Titular indiscutido!'; sub = 'Muy buen puntaje, casi perfecto.'; }
+    else if (score >= 4) { msg = 'Nivel Suplente de lujo'; sub = 'Nada mal, con un poco más entras al 11 inicial.'; }
+    else { msg = 'Nivel Hincha de corazón'; sub = 'Lo tuyo es el aguante, no las estadísticas.'; }
+
+    const banner = el('div', { class:'submitted-banner' });
+    banner.appendChild(el('h3', {}, `${score} / ${TRIVIA_QUESTIONS.length} · ${msg}`));
+    banner.appendChild(el('p', {}, sub));
+    wrap.appendChild(banner);
+
+    wrap.appendChild(el('div', { class:'section-label' }, 'REVISIÓN PREGUNTA POR PREGUNTA'));
+
+    TRIVIA_QUESTIONS.forEach((item, qi) => {
+      const correct = answers[qi] === item.a;
+      const card = el('div', { class:'card' });
+      const hdr = el('div', { style:{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:'8px', marginBottom:'10px' } });
+      hdr.appendChild(el('h2', { style:{ marginBottom:0 } }, `${qi+1}. ${item.q}`));
+      hdr.appendChild(el('span', { class: correct ? 'pts-badge pts-exact' : 'pts-badge pts-zero' }, correct ? 'Correcta ✓' : 'Incorrecta'));
+      card.appendChild(hdr);
+
+      item.opts.forEach((opt, oi) => {
+        const isYourAnswer = answers[qi] === oi;
+        const isCorrectAnswer = item.a === oi;
+        let bg = 'var(--bg-light)', border = 'var(--border)', textColor = 'var(--text)';
+        if (isCorrectAnswer) { bg = '#f0fdf4'; border = '#86efac'; textColor = '#166534'; }
+        if (isYourAnswer && !isCorrectAnswer) { bg = '#fef2f2'; border = '#fca5a5'; textColor = '#991b1b'; }
+        const row = el('div', { style:{
+          padding:'10px 12px', borderRadius:'10px', marginBottom:'6px',
+          background:bg, border:`2px solid ${border}`, color:textColor,
+          fontSize:'13px', fontWeight: (isYourAnswer || isCorrectAnswer) ? 700 : 500,
+          display:'flex', justifyContent:'space-between', alignItems:'center'
+        }});
+        row.appendChild(el('span', {}, opt));
+        let tag = '';
+        if (isYourAnswer && isCorrectAnswer) tag = 'Tu respuesta ✓';
+        else if (isYourAnswer) tag = 'Tu respuesta';
+        else if (isCorrectAnswer) tag = 'Correcta';
+        if (tag) row.appendChild(el('span', { style:{ fontSize:'11px', fontWeight:800 } }, tag));
+        card.appendChild(row);
+      });
+
+      wrap.appendChild(card);
+    });
+
+    const retryBtn = el('button', { class:'btn btn-ghost', style:{ marginTop:'6px', marginBottom:'20px' } }, 'Jugar de nuevo');
+    retryBtn.addEventListener('click', () => {
+      answers.fill(null);
+      renderLogin();
+    });
+    wrap.appendChild(retryBtn);
+
+    root.appendChild(wrap);
+  }
+
   renderLogin();
 }
 

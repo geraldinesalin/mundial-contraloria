@@ -254,9 +254,9 @@ const MATCHES = [
 const TRIVIA_QUESTIONS = [
   { q:"¿Qué país ha ganado más Copas del Mundo?", opts:["Alemania","Brasil","Argentina","Italia"], a:1 },
   { q:"El Mundial 2026 se juega en 3 países. ¿Cuáles son?", opts:["España, Portugal, Marruecos","Estados Unidos, México, Canadá","Argentina, Uruguay, Chile","Qatar, Arabia Saudita, EAU"], a:1 },
-  { q:"¿Cuántos equipos participan por primera vez en el Mundial 2026?", opts:["32","40","48","64"], a:2 },
+  { q:"¿Cuántas selecciones debutan en el Mundial 2026 (juegan su primera Copa del Mundo)?", opts:["2","4","6","8"], a:1 },
   { q:"¿Quién ganó el Mundial de Qatar 2022?", opts:["Francia","Brasil","Argentina","Croacia"], a:2 },
-  { q:"¿Quién es el máximo goleador histórico en Copas del Mundo?", opts:["Pelé","Miroslav Klose","Lionel Messi","Ronaldo Nazário"], a:1 },
+  { q:"¿Quién es el máximo goleador histórico en Copas del Mundo?", opts:["Pelé","Miroslav Klose","Lionel Messi","Ronaldo Nazário"], a:2 },
   { q:"¿En qué año se jugó el primer Mundial de fútbol?", opts:["1930","1926","1934","1950"], a:0 },
   { q:"¿Cuál es el estadio más grande confirmado para el Mundial 2026?", opts:["Rose Bowl","MetLife Stadium","Estadio Azteca","AT&T Stadium"], a:3 },
   { q:"¿Qué selección tiene el apodo de 'La Roja'?", opts:["Chile","España","Portugal","Bélgica"], a:0 },
@@ -863,6 +863,19 @@ async function renderAdminApp() {
       render();
     });
     statusCard.appendChild(resetBtn);
+
+    // reset trivia
+    const resetTriviaBtn = el('button', { class:'btn btn-ghost', style:{marginTop:'8px'} }, '🧠 Reiniciar intentos de trivia');
+    resetTriviaBtn.addEventListener('click', async () => {
+      if (!confirm('¿Seguro? Esto borrará todos los intentos de la trivia y todos podrán volver a jugarla.')) return;
+      const tidx = await storageGet('trivia_players_index') || [];
+      for (const name of tidx) await storageDelete('trivia:' + name);
+      await storageDelete('trivia_players_index');
+      showToast('Intentos de trivia borrados ✓');
+      render();
+    });
+    statusCard.appendChild(resetTriviaBtn);
+
     wrap.appendChild(statusCard);
   }
 

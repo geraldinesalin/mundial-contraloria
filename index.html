@@ -247,7 +247,16 @@ const MATCHES = [
   { id:85, group:"R32", home:"Portugal",         away:"Croacia",           date:"3 Jul",  f1:"🇵🇹", f2:"🇭🇷" },
   { id:86, group:"R32", home:"Australia",        away:"Egipto",            date:"3 Jul",  f1:"🇦🇺", f2:"🇪🇬" },
   { id:87, group:"R32", home:"Argentina",        away:"Cabo Verde",        date:"3 Jul",  f1:"🇦🇷", f2:"🇨🇻" },
-  { id:88, group:"R32", home:"Colombia",         away:"Ghana",             date:"4 Jul",  f1:"🇨🇴", f2:"🇬🇭" },
+  { id:88, group:"R32", home:"Colombia",            away:"Ghana",                date:"4 Jul",  f1:"🇨🇴", f2:"🇬🇭" },
+  // ── OCTAVOS DE FINAL (R16) ──
+  { id:89, group:"R16", home:"Canadá",              away:"Marruecos",            date:"4 Jul",  f1:"🇨🇦", f2:"🇲🇦" },
+  { id:90, group:"R16", home:"Paraguay",            away:"Francia",              date:"4 Jul",  f1:"🇵🇾", f2:"🇫🇷" },
+  { id:91, group:"R16", home:"Brasil",              away:"Noruega",              date:"5 Jul",  f1:"🇧🇷", f2:"🇳🇴" },
+  { id:92, group:"R16", home:"México",              away:"Inglaterra",           date:"5 Jul",  f1:"🇲🇽", f2:"🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { id:93, group:"R16", home:"Bélgica",             away:"EE.UU.",               date:"6 Jul",  f1:"🇧🇪", f2:"🇺🇸" },
+  { id:94, group:"R16", home:"Por definir",         away:"Por definir",          date:"6 Jul",  f1:"❓",  f2:"❓" },
+  { id:95, group:"R16", home:"Por definir",         away:"Por definir",          date:"7 Jul",  f1:"❓",  f2:"❓" },
+  { id:96, group:"R16", home:"Por definir",         away:"Por definir",          date:"7 Jul",  f1:"❓",  f2:"❓" },
 ];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -787,12 +796,13 @@ async function renderAdminApp() {
     // group filter
     const groups = ['all', ...new Set(MATCHES.map(m=>m.group)).values()].sort((a,b) => {
       if (a==='all') return -1; if (b==='all') return 1;
-      if (a==='R32') return 1; if (b==='R32') return -1;
+      if (a==='R32' && b==='R16') return -1; if (a==='R16' && b==='R32') return 1;
+      if (a==='R32' || a==='R16') return 1; if (b==='R32' || b==='R16') return -1;
       return a.localeCompare(b);
     });
     const gf = el('div', { class:'group-filter' });
     groups.forEach(g => {
-      const label = g==='all' ? 'Todos' : g==='R32' ? '16vos' : `G ${g}`;
+      const label = g==='all' ? 'Todos' : g==='R32' ? '16vos' : g==='R16' ? '8vos' : `G ${g}`;
       const btn = el('button', { class: activeGroup===g ? 'gchip on' : 'gchip off' }, label);
       btn.addEventListener('click', () => { activeGroup=g; render(); });
       gf.appendChild(btn);

@@ -254,9 +254,14 @@ const MATCHES = [
   { id:91, group:"R16", home:"Brasil",              away:"Noruega",              date:"5 Jul",  f1:"🇧🇷", f2:"🇳🇴" },
   { id:92, group:"R16", home:"México",              away:"Inglaterra",           date:"5 Jul",  f1:"🇲🇽", f2:"🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
   { id:93, group:"R16", home:"Bélgica",             away:"EE.UU.",               date:"6 Jul",  f1:"🇧🇪", f2:"🇺🇸" },
-  { id:94, group:"R16", home:"Por definir",         away:"Por definir",          date:"6 Jul",  f1:"❓",  f2:"❓" },
-  { id:95, group:"R16", home:"Por definir",         away:"Por definir",          date:"7 Jul",  f1:"❓",  f2:"❓" },
-  { id:96, group:"R16", home:"Por definir",         away:"Por definir",          date:"7 Jul",  f1:"❓",  f2:"❓" },
+  { id:94, group:"R16", home:"Portugal",            away:"España",               date:"6 Jul",  f1:"🇵🇹", f2:"🇪🇸" },
+  { id:95, group:"R16", home:"Argentina",           away:"Egipto",               date:"7 Jul",  f1:"🇦🇷", f2:"🇪🇬" },
+  { id:96, group:"R16", home:"Suiza",               away:"Colombia",             date:"7 Jul",  f1:"🇨🇭", f2:"🇨🇴" },
+  // ── CUARTOS DE FINAL (QF) ──
+  { id:97,  group:"QF", home:"Marruecos",            away:"Francia",              date:"9 Jul",  f1:"🇲🇦", f2:"🇫🇷" },
+  { id:98,  group:"QF", home:"Por definir",          away:"Por definir",          date:"10 Jul", f1:"❓",  f2:"❓" },
+  { id:99,  group:"QF", home:"Por definir",          away:"Por definir",          date:"11 Jul", f1:"❓",  f2:"❓" },
+  { id:100, group:"QF", home:"Por definir",          away:"Por definir",          date:"11 Jul", f1:"❓",  f2:"❓" },
 ];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -611,9 +616,9 @@ function renderFixtureCards(wrap, config, isAdmin) {
     { date:'5 Jul',  venue:'New Jersey',   h:{f:'🇧🇷',n:'Brasil'},           a:{f:'🇳🇴',n:'Noruega'},           confirmed:true, score:null },
     { date:'5 Jul',  venue:'México D.F.',  h:{f:'🇲🇽',n:'México'},           a:{f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',n:'Inglaterra'},      confirmed:true, score:null },
     { date:'6 Jul',  venue:'Seattle',      h:{f:'🇧🇪',n:'Bélgica'},          a:{f:'🇺🇸',n:'EE.UU.'},            confirmed:true, score:null },
-    { date:'6 Jul',  venue:'Dallas',       h:{f:'❓',n:'España o Austria'},   a:{f:'❓',n:'Portugal o Croacia'}, confirmed:false, score:null },
-    { date:'7 Jul',  venue:'Atlanta',      h:{f:'❓',n:'Australia o Egipto'}, a:{f:'❓',n:'Argentina o Cabo V.'}, confirmed:false, score:null },
-    { date:'7 Jul',  venue:'Vancouver',    h:{f:'❓',n:'Suiza o Argelia'},    a:{f:'❓',n:'Colombia o Ghana'},   confirmed:false, score:null },
+    { date:'6 Jul',  venue:'Dallas',       h:{f:'🇵🇹',n:'Portugal'},         a:{f:'🇪🇸',n:'España'},            confirmed:true, score:null },
+    { date:'7 Jul',  venue:'Atlanta',      h:{f:'🇦🇷',n:'Argentina'},         a:{f:'🇪🇬',n:'Egipto'},            confirmed:true, score:null },
+    { date:'7 Jul',  venue:'Vancouver',    h:{f:'🇨🇭',n:'Suiza'},             a:{f:'🇨🇴',n:'Colombia'},          confirmed:true, score:null },
   ];
 
   const r16grid = el('div', { style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 10px'} });
@@ -621,13 +626,27 @@ function renderFixtureCards(wrap, config, isAdmin) {
   r16Card.appendChild(r16grid);
   wrap.appendChild(r16Card);
 
-  // ── CUARTOS, SEMIS, FINAL (placeholders)
+  // ── CUARTOS DE FINAL
+  const qfCard = el('div', { class:'card' });
+  qfCard.appendChild(el('h2', {}, '🌟 Cuartos de final'));
+  qfCard.appendChild(el('p', { style:{fontSize:'11px',color:'var(--muted)',marginBottom:'14px'} }, '9–11 Jul'));
+  const QF = [
+    { date:'9 Jul',  venue:'Boston (Foxborough)', h:{f:'🇲🇦',n:'Marruecos'}, a:{f:'🇫🇷',n:'Francia'},          confirmed:true,  score:null },
+    { date:'11 Jul', venue:'Kansas City',         h:{f:'❓',n:'Brasil o Noruega'}, a:{f:'❓',n:'México o Inglaterra'}, confirmed:false, score:null },
+    { date:'10 Jul', venue:'Los Ángeles',         h:{f:'❓',n:'Portugal o España'}, a:{f:'❓',n:'Bélgica o EE.UU.'}, confirmed:false, score:null },
+    { date:'11 Jul', venue:'Miami',               h:{f:'❓',n:'Argentina o Egipto'}, a:{f:'❓',n:'Suiza o Colombia'}, confirmed:false, score:null },
+  ];
+  const qfgrid = el('div', { style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 10px'} });
+  QF.forEach(m => qfgrid.appendChild(mkMatchRow(m)));
+  qfCard.appendChild(qfgrid);
+  wrap.appendChild(qfCard);
+
+  // ── SEMIS Y FINAL (placeholders)
   const laterCard = el('div', { class:'card' });
   laterCard.appendChild(el('h2', {}, '⏳ Próximas rondas'));
   const rounds = [
-    { label:'Cuartos de final', dates:'10–12 jul', n:4 },
-    { label:'Semifinales',      dates:'15–16 jul', n:2 },
-    { label:'FINAL 🏆',         dates:'19 jul · MetLife (NY)', n:1 },
+    { label:'Semifinales', dates:'14–15 jul', n:2 },
+    { label:'FINAL 🏆',    dates:'19 jul · MetLife (NY)', n:1 },
   ];
   rounds.forEach(r => {
     const sec = el('div', { style:{marginBottom:'12px'} });
@@ -798,11 +817,12 @@ async function renderAdminApp() {
       if (a==='all') return -1; if (b==='all') return 1;
       if (a==='R32' && b==='R16') return -1; if (a==='R16' && b==='R32') return 1;
       if (a==='R32' || a==='R16') return 1; if (b==='R32' || b==='R16') return -1;
+      if (a==='QF') return 1; if (b==='QF') return -1;
       return a.localeCompare(b);
     });
     const gf = el('div', { class:'group-filter' });
     groups.forEach(g => {
-      const label = g==='all' ? 'Todos' : g==='R32' ? '16vos' : g==='R16' ? '8vos' : `G ${g}`;
+      const label = g==='all' ? 'Todos' : g==='R32' ? '16vos' : g==='R16' ? '8vos' : g==='QF' ? '4tos' : `G ${g}`;
       const btn = el('button', { class: activeGroup===g ? 'gchip on' : 'gchip off' }, label);
       btn.addEventListener('click', () => { activeGroup=g; render(); });
       gf.appendChild(btn);
@@ -1298,13 +1318,13 @@ async function renderPlayerApp() {
       {
         label: 'Octavos de final',
         emoji: '🔥',
-        ids: [], // se agregarán cuando existan en MATCHES
+        ids: MATCHES.filter(m => m.group === 'R16').map(m => m.id),
         color: '#065f46',
       },
       {
         label: 'Cuartos de final',
         emoji: '🌟',
-        ids: [],
+        ids: MATCHES.filter(m => m.group === 'QF').map(m => m.id),
         color: '#78350f',
       },
     ];

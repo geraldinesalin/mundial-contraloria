@@ -762,14 +762,6 @@ async function renderRankingCards(wrap, config, opts={}) {
 async function renderAdminApp() {
   let config = await storageGet('config') || { matches: MATCHES.map(m=>m.id), status:'open', actuals:{} };
 
-  // Asegurar que todos los partidos de fase de grupos estén en config (sin duplicados)
-  // Los partidos R32 se agregan manualmente desde Config
-  const groupStageIds = MATCHES.filter(m=>m.group!=='R32').map(m=>m.id);
-  const merged = [...new Set([...(config.matches||[]), ...groupStageIds])];
-  if (merged.length !== (config.matches||[]).length) {
-    config.matches = merged;
-    await storageSet('config', config);
-  }
   let activeTab = 'setup';
   let activeGroup = 'all';
 

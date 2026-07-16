@@ -1174,17 +1174,9 @@ async function renderPlayerApp() {
     input.addEventListener('keydown', e => { if (e.key==='Enter') btn.click(); });
     card.appendChild(btn);
 
-    const rankBtn = el('button', { class:'btn btn-ghost', style:{ marginTop:'10px', background:'transparent', border:'none', color:'var(--bright)', textDecoration:'underline', fontWeight:700 } }, '🏆 Ver tabla de posiciones');
-    rankBtn.addEventListener('click', () => renderRanking());
-    card.appendChild(rankBtn);
-
     const fixBtn0 = el('button', { class:'btn btn-ghost', style:{ marginTop:'6px', background:'transparent', border:'none', color:'var(--bright)', textDecoration:'underline', fontWeight:700 } }, '🗺️ Ver fixture y clasificados');
     fixBtn0.addEventListener('click', () => renderFixturePlayer());
     card.appendChild(fixBtn0);
-
-    const ganadoresBtn0 = el('button', { class:'btn btn-ghost', style:{ marginTop:'6px', background:'transparent', border:'none', color:'var(--bright)', textDecoration:'underline', fontWeight:700 } }, '🥇 Ver Ganadores');
-    ganadoresBtn0.addEventListener('click', () => renderGanadores());
-    card.appendChild(ganadoresBtn0);
 
     const loginWrap = el('div', { class:'login-wrap' });
     loginWrap.appendChild(card);
@@ -1391,17 +1383,9 @@ async function renderPlayerApp() {
       wrap.appendChild(saveBtn);
     }
 
-    const rankBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'8px' } }, '🏆 Ver tabla de posiciones');
-    rankBtn2.addEventListener('click', () => renderRanking());
-    wrap.appendChild(rankBtn2);
-
     const fixBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'8px' } }, '🗺️ Ver fixture y clasificados');
     fixBtn2.addEventListener('click', () => renderFixturePlayer());
     wrap.appendChild(fixBtn2);
-
-    const ganadoresBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'24px' } }, '🥇 Ver Ganadores');
-    ganadoresBtn2.addEventListener('click', () => renderGanadores());
-    wrap.appendChild(ganadoresBtn2);
 
     root.appendChild(wrap);
   }

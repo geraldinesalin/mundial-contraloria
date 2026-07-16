@@ -265,6 +265,9 @@ const MATCHES = [
   // ── SEMIFINALES ──
   { id:101, group:"SF", home:"Francia",              away:"España",               date:"14 Jul", f1:"🇫🇷", f2:"🇪🇸" },
   { id:102, group:"SF", home:"Argentina",            away:"Inglaterra",           date:"15 Jul", f1:"🇦🇷", f2:"🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  // ── TERCER LUGAR Y FINAL ──
+  { id:103, group:"3RD", home:"Francia",             away:"Inglaterra",           date:"18 Jul", f1:"🇫🇷", f2:"🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { id:104, group:"FIN", home:"España",              away:"Argentina",            date:"19 Jul", f1:"🇪🇸", f2:"🇦🇷" },
 ];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -649,34 +652,33 @@ function renderFixtureCards(wrap, config, isAdmin) {
   sfCard.appendChild(el('h2', {}, '🔥 Semifinales'));
   sfCard.appendChild(el('p', { style:{fontSize:'11px',color:'var(--muted)',marginBottom:'14px'} }, '14–15 Jul'));
   const SF = [
-    { date:'14 Jul', venue:'Dallas (AT&T Stadium)',       h:{f:'🇫🇷',n:'Francia'},    a:{f:'🇪🇸',n:'España'},      confirmed:true, score:null },
-    { date:'15 Jul', venue:'Atlanta (Mercedes-Benz Std)', h:{f:'🇦🇷',n:'Argentina'}, a:{f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',n:'Inglaterra'}, confirmed:true, score:null },
+    { date:'14 Jul', venue:'Dallas (AT&T Stadium)',       h:{f:'🇫🇷',n:'Francia'},    a:{f:'🇪🇸',n:'España'},      confirmed:true, score:{h:0,a:2,pen:null} },
+    { date:'15 Jul', venue:'Atlanta (Mercedes-Benz Std)', h:{f:'🇦🇷',n:'Argentina'}, a:{f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',n:'Inglaterra'}, confirmed:true, score:{h:2,a:1,pen:null} },
   ];
   const sfgrid = el('div', { style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 10px'} });
   SF.forEach(m => sfgrid.appendChild(mkMatchRow(m)));
   sfCard.appendChild(sfgrid);
   wrap.appendChild(sfCard);
 
-  // ── TERCER LUGAR Y FINAL
-  const laterCard = el('div', { class:'card' });
-  laterCard.appendChild(el('h2', {}, '⏳ Por jugarse'));
-  const rounds = [
-    { label:'Tercer lugar 🥉', dates:'18 jul · Miami', n:1 },
-    { label:'FINAL 🏆',        dates:'19 jul · MetLife (NJ)', n:1 },
+  // ── TERCER LUGAR
+  const thirdCard = el('div', { class:'card' });
+  thirdCard.appendChild(el('h2', {}, '🥉 Tercer lugar'));
+  thirdCard.appendChild(el('p', { style:{fontSize:'11px',color:'var(--muted)',marginBottom:'14px'} }, '18 Jul · Miami (Hard Rock Stadium)'));
+  const THIRD = [
+    { date:'18 Jul', venue:'Miami (Hard Rock Stadium)', h:{f:'🇫🇷',n:'Francia'}, a:{f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',n:'Inglaterra'}, confirmed:true, score:null },
   ];
-  rounds.forEach(r => {
-    const sec = el('div', { style:{marginBottom:'12px'} });
-    const hdr = el('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px'} });
-    hdr.appendChild(el('span', { style:{fontSize:'11px',fontWeight:800,color:'#7f1d1d'} }, r.label));
-    hdr.appendChild(el('span', { style:{fontSize:'10px',color:'var(--muted)'} }, r.dates));
-    sec.appendChild(hdr);
-    sec.appendChild(el('div', { style:{
-      background:'#f8faff', border:'1px dashed #e2e8f0', borderRadius:'8px',
-      padding:'8px 10px', fontSize:'11px', color:'#9ca3af', textAlign:'center'
-    }}, 'Por definir'));
-    laterCard.appendChild(sec);
-  });
-  wrap.appendChild(laterCard);
+  THIRD.forEach(m => thirdCard.appendChild(mkMatchRow(m)));
+  wrap.appendChild(thirdCard);
+
+  // ── FINAL
+  const finalCard = el('div', { class:'card' });
+  finalCard.appendChild(el('h2', {}, '🏆 FINAL'));
+  finalCard.appendChild(el('p', { style:{fontSize:'11px',color:'var(--muted)',marginBottom:'14px'} }, '19 Jul · MetLife Stadium, New Jersey'));
+  const FINAL = [
+    { date:'19 Jul', venue:'MetLife Stadium (NJ)', h:{f:'🇪🇸',n:'España'}, a:{f:'🇦🇷',n:'Argentina'}, confirmed:true, score:null },
+  ];
+  FINAL.forEach(m => finalCard.appendChild(mkMatchRow(m)));
+  wrap.appendChild(finalCard);
 
   // ── POSICIONES POR GRUPO
   const grupCard = el('div', { class:'card' });
@@ -823,11 +825,13 @@ async function renderAdminApp() {
       if (a==='R32' || a==='R16') return 1; if (b==='R32' || b==='R16') return -1;
       if (a==='QF' && b==='SF') return -1; if (a==='SF' && b==='QF') return 1;
       if (a==='QF' || a==='SF') return 1; if (b==='QF' || b==='SF') return -1;
+      if (a==='3RD' && b==='FIN') return -1; if (a==='FIN' && b==='3RD') return 1;
+      if (a==='3RD' || a==='FIN') return 1; if (b==='3RD' || b==='FIN') return -1;
       return a.localeCompare(b);
     });
     const gf = el('div', { class:'group-filter' });
     groups.forEach(g => {
-      const label = g==='all' ? 'Todos' : g==='R32' ? '16vos' : g==='R16' ? '8vos' : g==='QF' ? '4tos' : g==='SF' ? 'Semis' : `G ${g}`;
+      const label = g==='all' ? 'Todos' : g==='R32' ? '16vos' : g==='R16' ? '8vos' : g==='QF' ? '4tos' : g==='SF' ? 'Semis' : g==='3RD' ? '3° lugar' : g==='FIN' ? 'Final' : `G ${g}`;
       const btn = el('button', { class: activeGroup===g ? 'gchip on' : 'gchip off' }, label);
       btn.addEventListener('click', () => { activeGroup=g; render(); });
       gf.appendChild(btn);
@@ -1016,6 +1020,99 @@ async function renderAdminApp() {
   // ── TABLA TAB ──
   async function renderTabla(wrap) {
     await renderRankingCards(wrap, config, { onRefresh: () => { activeTab='tabla'; render(); } });
+
+    // ── PREMIOS ESPECIALES (solo admin)
+    const idx = await storageGet('players_index') || [];
+    const allPreds = [];
+    for (const name of idx) {
+      const data = await storageGet('predictions:' + name);
+      if (data) allPreds.push({ name, predictions: data.predictions || {} });
+    }
+
+    // Partidos con resultado real ingresado
+    const matchesJugados = config.matches.filter(id => {
+      const a = config.actuals?.[id];
+      return a && typeof a.home === 'number';
+    });
+
+    if (matchesJugados.length === 0 || allPreds.length === 0) return;
+
+    // Calcular stats por jugador
+    const stats = allPreds.map(p => {
+      let exact = 0, result = 0, played = 0;
+      matchesJugados.forEach(id => {
+        const pred = p.predictions[id];
+        const act = config.actuals[id];
+        if (!pred || pred.home === '' || pred.away === '' || typeof pred.home !== 'number') return;
+        played++;
+        const getR = (h,a) => h>a?'L':a>h?'V':'E';
+        if (pred.home === act.home && pred.away === act.away) exact++;
+        else if (getR(pred.home,pred.away) === getR(act.home,act.away)) result++;
+      });
+      return { name: p.name, exact, result, played, wrong: played - exact - result };
+    });
+
+    const premiosCard = el('div', { class:'card', style:{marginTop:'14px'} });
+    premiosCard.appendChild(el('h2', {}, '🎖️ Premios especiales'));
+
+    const premios = [
+      {
+        titulo: '🎯 Rey del marcador exacto',
+        desc: 'Más partidos con marcador exacto',
+        sorted: [...stats].sort((a,b) => b.exact - a.exact || b.played - a.played),
+        stat: s => `${s.exact} exactos`,
+        color: '#f59e0b',
+      },
+      {
+        titulo: '☑️ Rey del punto',
+        desc: 'Más partidos con resultado correcto (1 pt)',
+        sorted: [...stats].sort((a,b) => b.result - a.result || b.played - a.played),
+        stat: s => `${s.result} resultados`,
+        color: '#3b82f6',
+      },
+      {
+        titulo: '🏅 Premio a la perseverancia',
+        desc: 'Menos aciertos (solo partidos predichos)',
+        sorted: [...stats].filter(s => s.played > 0).sort((a,b) => {
+          const ratioA = (a.exact + a.result) / a.played;
+          const ratioB = (b.exact + b.result) / b.played;
+          return ratioA - ratioB || a.played - b.played;
+        }),
+        stat: s => `${s.exact + s.result} aciertos de ${s.played}`,
+        color: '#8b5cf6',
+      },
+    ];
+
+    premios.forEach(p => {
+      const sec = el('div', { style:{marginBottom:'18px',paddingBottom:'16px',borderBottom:'1px solid var(--border)'} });
+      const hdr = el('div', { style:{marginBottom:'10px'} });
+      hdr.appendChild(el('div', { style:{fontSize:'14px',fontWeight:800,color:'var(--text)'} }, p.titulo));
+      hdr.appendChild(el('div', { style:{fontSize:'11px',color:'var(--muted)'} }, p.desc));
+      sec.appendChild(hdr);
+
+      const medals = ['🥇','🥈','🥉'];
+      const medalBg = ['#fffbeb','#f8faff','#fff7ed'];
+      const medalBorder = ['#fbbf24','#e2e8f0','#fed7aa'];
+
+      p.sorted.slice(0,3).forEach((s,i) => {
+        const row = el('div', { style:{
+          display:'flex', alignItems:'center', gap:'10px',
+          padding:'9px 12px', borderRadius:'10px', marginBottom:'5px',
+          background: medalBg[i], border:`1.5px solid ${medalBorder[i]}`
+        }});
+        row.appendChild(el('span', { style:{fontSize:'20px',flexShrink:0} }, medals[i]));
+        row.appendChild(el('span', { style:{flex:1,fontSize:'13px',fontWeight:700,color:'var(--text)'} }, s.name));
+        row.appendChild(el('span', { style:{fontSize:'12px',fontWeight:800,color:p.color} }, p.stat(s)));
+        sec.appendChild(row);
+      });
+      premiosCard.appendChild(sec);
+    });
+
+    // quitar último border
+    const secs = premiosCard.querySelectorAll('div[style*="border-bottom"]');
+    if (secs.length) secs[secs.length-1].style.borderBottom = 'none';
+
+    wrap.appendChild(premiosCard);
   }
 
   render();

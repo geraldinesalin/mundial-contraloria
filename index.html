@@ -800,7 +800,7 @@ async function renderAdminApp() {
 
     // tabs
     const tabs = el('div', { class:'tabs' });
-    [['setup','⚙️ Config'],['results','📋 Resultados'],['fixture','🗺️ Fixture'],['tabla','🏆 Tabla']].forEach(([id,label]) => {
+    [['setup','⚙️ Config'],['results','📋 Resultados'],['fixture','🗺️ Fixture'],['tabla','🏆 Tabla'],['etapas','🥇 Etapas'],['premios','🎖️ Premios']].forEach(([id,label]) => {
       const t = el('button', { class: activeTab===id ? 'tab active' : 'tab' }, label);
       t.addEventListener('click', () => { activeTab=id; render(); });
       tabs.appendChild(t);
@@ -811,6 +811,8 @@ async function renderAdminApp() {
     else if (activeTab === 'results') { renderResults(wrap); root.appendChild(wrap); }
     else if (activeTab === 'fixture') { root.appendChild(wrap); renderFixture(wrap); }
     else if (activeTab === 'tabla') { root.appendChild(wrap); renderTabla(wrap); }
+    else if (activeTab === 'etapas') { root.appendChild(wrap); renderEtapas(wrap); }
+    else if (activeTab === 'premios') { root.appendChild(wrap); renderPremiosEspeciales(wrap); }
   }
 
   // ── SETUP TAB ──
@@ -1017,6 +1019,179 @@ async function renderAdminApp() {
     renderFixtureCards(wrap, config, true);
   }
 
+  // ── ETAPAS TAB ──
+  async function renderEtapas(wrap) {
+    const EXCLUIR = s => s.toLowerCase().includes('rodrigo garcia');
+
+    const idx = await storageGet('players_index') || [];
+    const allPreds = [];
+    for (const name of idx) {
+      if (EXCLUIR(name)) continue;
+      const data = await storageGet('predictions:' + name);
+      if (data) allPreds.push({ name, predictions: data.predictions || {} });
+    }
+
+    const ETAPAS = [
+      { label:'Fase de grupos', emoji:'🏟️', grupos:['A','B','C','D','E','F','G','H','I','J','K','L'] },
+      { label:'16vos de final', emoji:'⚔️', grupos:['R32'] },
+      { label:'Octavos de final', emoji:'🔥', grupos:['R16'] },
+      { label:'Cuartos de final', emoji:'🌟', grupos:['QF'] },
+      { label:'Semifinales',     emoji:'🏆', grupos:['SF'] },
+    ];
+
+    const medals = ['🥇','🥈','🥉'];
+    const medalBg = ['#fffbeb','#f8faff','#fff7ed'];
+    const medalBorder = ['#fbbf24','#cbd5e1','#fed7aa'];
+
+    const card = el('div', { class:'card' });
+    card.appendChild(el('h2', {}, '🥇 Ganadores por etapa'));
+    card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginBottom:'16px'} },
+      'Top 3 por etapa · Excluye a Rodrigo García'));
+
+    ETAPAS.forEach(etapa => {
+      const ids = MATCHES
+        .filter(m => etapa.grupos.includes(m.group))
+        .map(m => m.id)
+        .filter(id => { const a = config.actuals?.[id]; return a && typeof a.home === 'number'; });
+
+      const sec = el('div', { style:{marginBottom:'20px',paddingBottom:'18px',borderBottom:'1.5px solid #f0e0e0'} });
+      const hdr = el('div', { style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'10px'} });
+      hdr.appendChild(el('span', { style:{fontSize:'20px'} }, etapa.emoji));
+      hdr.appendChild(el('div', {},
+        el('div', { style:{fontSize:'13px',fontWeight:800,color:'#3b0f0f'} }, etapa.label),
+        el('div', { style:{fontSize:'10px',color:'var(--muted)'} }, `${ids.length} partidos con resultado`)
+      ));
+      sec.appendChild(hdr);
+
+      if (ids.length === 0) {
+        sec.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',fontStyle:'italic'} }, 'Sin resultados ingresados aún'));
+        card.appendChild(sec);
+        return;
+      }
+
+      const scores = allPreds.map(p => ({
+        name: p.name,
+        pts: calcPoints(p.predictions, config.actuals, ids),
+        exact: ids.filter(id => {
+          const pr = p.predictions[id], ac = config.actuals[id];
+          return pr && ac && typeof pr.home==='number' && pr.home===ac.home && pr.away===ac.away;
+        }).length,
+      })).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
+
+      scores.slice(0,3).forEach((s,i) => {
+        const row = el('div', { style:{
+          display:'flex',alignItems:'center',gap:'10px',padding:'9px 12px',
+          borderRadius:'10px',marginBottom:'5px',
+          background:medalBg[i], border:`1.5px solid ${medalBorder[i]}`
+        }});
+        row.appendChild(el('span', { style:{fontSize:'22px',flexShrink:0} }, medals[i]));
+        row.appendChild(el('span', { style:{flex:1,fontSize:'13px',fontWeight:700,color:'#1a2a5e'} }, s.name));
+        const right = el('div', { style:{textAlign:'right',flexShrink:0} });
+        right.appendChild(el('div', { style:{fontSize:'18px',fontWeight:900,color:'#7f1d1d'} }, `${s.pts} pts`));
+        right.appendChild(el('div', { style:{fontSize:'10px',color:'var(--muted)'} }, `${s.exact} exactos`));
+        row.appendChild(right);
+        sec.appendChild(row);
+      });
+      card.appendChild(sec);
+    });
+
+    // quitar último border
+    const secs = card.querySelectorAll('div[style*="border-bottom"]');
+    if (secs.length) secs[secs.length-1].style.borderBottom = 'none';
+    wrap.appendChild(card);
+  }
+
+  // ── PREMIOS ESPECIALES TAB ──
+  async function renderPremiosEspeciales(wrap) {
+    const EXCLUIR = s => s.toLowerCase().includes('rodrigo garcia');
+
+    const idx = await storageGet('players_index') || [];
+    const allPreds = [];
+    for (const name of idx) {
+      if (EXCLUIR(name)) continue;
+      const data = await storageGet('predictions:' + name);
+      if (data) allPreds.push({ name, predictions: data.predictions || {} });
+    }
+
+    const matchesJugados = config.matches.filter(id => {
+      const a = config.actuals?.[id];
+      return a && typeof a.home === 'number';
+    });
+
+    const stats = allPreds.map(p => {
+      let exact = 0, result = 0, played = 0;
+      matchesJugados.forEach(id => {
+        const pred = p.predictions[id];
+        const act = config.actuals[id];
+        if (!pred || pred.home === '' || pred.away === '' || typeof pred.home !== 'number') return;
+        played++;
+        const getR = (h,a) => h>a?'L':a>h?'V':'E';
+        if (pred.home === act.home && pred.away === act.away) exact++;
+        else if (getR(pred.home,pred.away) === getR(act.home,act.away)) result++;
+      });
+      return { name: p.name, exact, result, played, wrong: played - exact - result };
+    });
+
+    const medals = ['🥇','🥈','🥉'];
+    const medalBg = ['#fffbeb','#f8faff','#fff7ed'];
+    const medalBorder = ['#fbbf24','#cbd5e1','#fed7aa'];
+
+    const card = el('div', { class:'card' });
+    card.appendChild(el('h2', {}, '🎖️ Premios especiales'));
+    card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginBottom:'16px'} },
+      'Reconocimientos especiales · Excluye a Rodrigo García'));
+
+    const premios = [
+      {
+        titulo: '🎯 Rey del marcador exacto',
+        desc: 'El que más veces acertó el marcador exacto',
+        sorted: [...stats].sort((a,b) => b.exact-a.exact || b.played-a.played),
+        stat: s => `${s.exact} exactos`,
+        color: '#d97706',
+      },
+      {
+        titulo: '☑️ Rey del punto',
+        desc: 'El que más veces acertó solo el resultado (1 pt)',
+        sorted: [...stats].sort((a,b) => b.result-a.result || b.played-a.played),
+        stat: s => `${s.result} resultados`,
+        color: '#2563eb',
+      },
+      {
+        titulo: '🏅 Premio a la perseverancia',
+        desc: 'El que le achuntó menos (solo partidos predichos)',
+        sorted: [...stats].filter(s => s.played > 0).sort((a,b) => {
+          const ratioA = (a.exact+a.result)/a.played;
+          const ratioB = (b.exact+b.result)/b.played;
+          return ratioA-ratioB || a.played-b.played;
+        }),
+        stat: s => `${s.exact+s.result} aciertos de ${s.played}`,
+        color: '#7c3aed',
+      },
+    ];
+
+    premios.forEach((p, pi) => {
+      const sec = el('div', { style:{marginBottom:'20px',paddingBottom:'18px', borderBottom: pi < premios.length-1 ? '1.5px solid #f0e0e0' : 'none'} });
+      const hdr = el('div', { style:{marginBottom:'10px'} });
+      hdr.appendChild(el('div', { style:{fontSize:'14px',fontWeight:800,color:'#3b0f0f'} }, p.titulo));
+      hdr.appendChild(el('div', { style:{fontSize:'11px',color:'var(--muted)'} }, p.desc));
+      sec.appendChild(hdr);
+
+      p.sorted.slice(0,3).forEach((s,i) => {
+        const row = el('div', { style:{
+          display:'flex',alignItems:'center',gap:'10px',padding:'9px 12px',
+          borderRadius:'10px',marginBottom:'5px',
+          background:medalBg[i], border:`1.5px solid ${medalBorder[i]}`
+        }});
+        row.appendChild(el('span', { style:{fontSize:'22px',flexShrink:0} }, medals[i]));
+        row.appendChild(el('span', { style:{flex:1,fontSize:'13px',fontWeight:700,color:'#1a2a5e'} }, s.name));
+        row.appendChild(el('span', { style:{fontSize:'13px',fontWeight:800,color:p.color} }, p.stat(s)));
+        sec.appendChild(row);
+      });
+      card.appendChild(sec);
+    });
+    wrap.appendChild(card);
+  }
+
   // ── TABLA TAB ──
   async function renderTabla(wrap) {
     await renderRankingCards(wrap, config, { onRefresh: () => { activeTab='tabla'; render(); } });
@@ -1174,10 +1349,6 @@ async function renderPlayerApp() {
     input.addEventListener('keydown', e => { if (e.key==='Enter') btn.click(); });
     card.appendChild(btn);
 
-    const fixBtn0 = el('button', { class:'btn btn-ghost', style:{ marginTop:'6px', background:'transparent', border:'none', color:'var(--bright)', textDecoration:'underline', fontWeight:700 } }, '🗺️ Ver fixture y clasificados');
-    fixBtn0.addEventListener('click', () => renderFixturePlayer());
-    card.appendChild(fixBtn0);
-
     const loginWrap = el('div', { class:'login-wrap' });
     loginWrap.appendChild(card);
     wrap.appendChild(loginWrap);
@@ -1239,153 +1410,35 @@ async function renderPlayerApp() {
       el('p', {}, `Hola, ${playerName} 👋`)
     ));
 
-    if (!config) {
-      wrap.appendChild(el('div', { class:'card' },
-        el('p', { style:{textAlign:'center',color:'var(--muted)'} }, 'El concurso aún no está configurado. Vuelve más tarde.')));
-      root.appendChild(wrap);
-      return;
-    }
+    // Mensaje de cierre del concurso
+    const card = el('div', { class:'card', style:{textAlign:'center',padding:'32px 20px'} });
+    card.appendChild(el('div', { style:{fontSize:'56px',marginBottom:'16px'} }, '🏆'));
+    card.appendChild(el('h2', { style:{fontSize:'20px',fontWeight:900,color:'#7f1d1d',marginBottom:'12px'} },
+      '¡Gracias por participar!'));
+    card.appendChild(el('p', { style:{fontSize:'14px',color:'var(--text)',marginBottom:'20px',lineHeight:'1.6'} },
+      `${playerName}, fue un Mundial increíble y tus predicciones quedaron registradas. ¡Esperamos que hayas disfrutado el concurso!`));
 
-    if (config.status === 'closed') {
-      wrap.appendChild(el('div', { class:'card' },
-        el('p', { style:{textAlign:'center',color:'var(--red)',fontWeight:700} }, '🔒 El concurso está cerrado. No se aceptan nuevas predicciones.')));
-    }
+    const divider = el('div', { style:{
+      background:'linear-gradient(135deg,#7f1d1d,#b91c1c)',
+      borderRadius:'14px', padding:'20px', marginBottom:'8px'
+    }});
+    divider.appendChild(el('div', { style:{fontSize:'28px',marginBottom:'8px'} }, '📅'));
+    divider.appendChild(el('div', { style:{fontSize:'15px',fontWeight:800,color:'#fff',marginBottom:'4px'} },
+      'Ceremonia de premiación'));
+    divider.appendChild(el('div', { style:{fontSize:'18px',fontWeight:900,color:'#fbbf24'} },
+      'Miércoles 22 de julio'));
+    divider.appendChild(el('div', { style:{fontSize:'14px',color:'rgba(255,255,255,0.85)',marginTop:'4px'} },
+      '15:00 hrs'));
+    card.appendChild(divider);
 
-    // banner si ya tiene predicciones guardadas
-    const hasSaved = lastSavedAt !== null;
-    if (hasSaved) {
-      const banner = el('div', { class:'submitted-banner' });
-      banner.appendChild(el('h3', {}, '✅ Tus predicciones están guardadas'));
-      banner.appendChild(el('p', {}, 'Puedes seguir completando los partidos que falten o editar los que aún no se han jugado.'));
-      wrap.appendChild(banner);
-    }
+    card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginTop:'16px'} },
+      '¡Nos vemos ahí! ⚽🎉'));
+    wrap.appendChild(card);
 
-    // progress
-    {
-      const filled = config.matches.filter(id => {
-        const p = predictions[id];
-        return p && p.home !== '' && p.away !== '';
-      }).length;
-      const total = config.matches.length;
-      const progWrap = el('div', {});
-      progWrap.appendChild(el('div', { style:{ display:'flex', justifyContent:'space-between', color:'rgba(255,255,255,0.8)', fontSize:'12px', marginBottom:'6px' } },
-        el('span', {}, '⚽ Tus predicciones'),
-        el('span', {}, `${filled}/${total} completados`)
-      ));
-      const track = el('div', { class:'prog-track' });
-      const fill = el('div', { class:'prog-fill', style:{ width: total?`${(filled/total)*100}%`:'0%' } });
-      track.appendChild(fill);
-      progWrap.appendChild(track);
-      wrap.appendChild(progWrap);
-    }
-
-    // puntos acumulados hasta ahora
-    const ptsActuales = calcPoints(predictions, config.actuals || {}, config.matches);
-    const matchesConResultado = config.matches.filter(id => {
-      const a = config.actuals?.[id];
-      return a && typeof a.home === 'number';
-    }).length;
-    if (matchesConResultado > 0) {
-      const ptsBanner = el('div', { style:{
-        background:'rgba(255,255,255,0.12)', borderRadius:'12px', padding:'12px 16px',
-        marginBottom:'14px', display:'flex', justifyContent:'space-between', alignItems:'center'
-      }});
-      ptsBanner.appendChild(el('span', { style:{color:'rgba(255,255,255,0.85)',fontSize:'13px'} },
-        `🏅 Puntos acumulados (${matchesConResultado} partidos jugados)`));
-      ptsBanner.appendChild(el('span', { style:{color:'#fbbf24',fontSize:'22px',fontWeight:900} },
-        `${ptsActuales} pts`));
-      wrap.appendChild(ptsBanner);
-    }
-
-    // solo mostrar partidos SIN resultado aún (pendientes de predicción)
-    const matchesPendientes = config.matches.filter(id => {
-      const a = config.actuals?.[id];
-      return !(a && typeof a.home === 'number');
-    });
-
-    if (matchesPendientes.length === 0) {
-      wrap.appendChild(el('div', { class:'card' },
-        el('p', { style:{textAlign:'center',color:'var(--muted)',padding:'12px'} },
-          '✅ Todos los partidos ya tienen resultado. ¡Revisa tu puntaje en la tabla!')));
-    } else {
-      const pendLabel = el('div', { style:{color:'rgba(255,255,255,0.7)',fontSize:'12px',fontWeight:700,marginBottom:'8px'} },
-        `📋 Partidos pendientes de predicción (${matchesPendientes.length})`);
-      wrap.appendChild(pendLabel);
-    }
-
-    matchesPendientes.forEach(id => {
-      const match = MATCHES.find(m=>m.id===id);
-      if (!match) return;
-      const locked = config.status === 'closed';
-      const card = makeMatchCard(
-        match,
-        predictions[id] || { home:'', away:'' },
-        locked ? null : (val) => { predictions[id] = val; },
-        null, null, false, locked
-      );
-      wrap.appendChild(card);
-    });
-
-    // partidos ya jugados (colapsados, solo puntos)
-    const matchesJugados = config.matches.filter(id => {
-      const a = config.actuals?.[id];
-      return a && typeof a.home === 'number';
-    });
-    if (matchesJugados.length > 0) {
-      const togBtn = el('button', { class:'btn btn-ghost', style:{marginTop:'4px',marginBottom:'8px',fontSize:'13px'} },
-        `📂 Ver ${matchesJugados.length} partidos ya jugados`);
-      let expanded = false;
-      const jugadosWrap = el('div', { style:{display:'none'} });
-      matchesJugados.forEach(id => {
-        const match = MATCHES.find(m=>m.id===id);
-        if (!match) return;
-        const actual = config.actuals[id];
-        jugadosWrap.appendChild(makeMatchCard(match, predictions[id], null, actual, null, false, true));
-      });
-      togBtn.addEventListener('click', () => {
-        expanded = !expanded;
-        jugadosWrap.style.display = expanded ? 'block' : 'none';
-        togBtn.textContent = expanded
-          ? `📂 Ocultar partidos jugados`
-          : `📂 Ver ${matchesJugados.length} partidos ya jugados`;
-      });
-      wrap.appendChild(togBtn);
-      wrap.appendChild(jugadosWrap);
-    }
-
-    // save button
-    if (config.status !== 'closed') {
-      const filled = config.matches.filter(id => {
-        const p = predictions[id];
-        return p && p.home !== '' && p.away !== '';
-      }).length;
-
-      const saveBtn = el('button', {
-        class: 'btn btn-gold',
-        style:{ marginTop:'8px', marginBottom:'8px' },
-      }, hasSaved ? '💾 Actualizar predicciones' : '✅ Enviar predicciones');
-
-      saveBtn.addEventListener('click', async () => {
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Guardando…';
-
-        // register in index
-        let idx = await storageGet('players_index') || [];
-        if (!idx.includes(playerName)) { idx.push(playerName); await storageSet('players_index', idx); }
-
-        // save predictions
-        await storageSet('predictions:' + playerName, { name: playerName, predictions, submittedAt: Date.now() });
-
-        lastSavedAt = Date.now();
-        showToast('¡Predicciones guardadas! 🎉');
-        renderPredictions();
-      });
-      wrap.appendChild(saveBtn);
-    }
-
-    const fixBtn2 = el('button', { class:'btn btn-ghost', style:{ marginBottom:'8px' } }, '🗺️ Ver fixture y clasificados');
-    fixBtn2.addEventListener('click', () => renderFixturePlayer());
-    wrap.appendChild(fixBtn2);
+    // botón fixture
+    const fixBtn = el('button', { class:'btn btn-ghost', style:{marginBottom:'24px'} }, '🗺️ Ver fixture del Mundial');
+    fixBtn.addEventListener('click', () => renderFixturePlayer());
+    wrap.appendChild(fixBtn);
 
     root.appendChild(wrap);
   }

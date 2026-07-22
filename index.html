@@ -1399,7 +1399,23 @@ async function renderPlayerApp() {
   }
 
 
-  function renderPredictions() {
+  async function renderPredictions() {
+    root.innerHTML = '<div class="loading"><span class="spin">⚽</span> Cargando resultados…</div>';
+
+    // Cargar config y predicciones para la tabla
+    const cfg = config;
+    const idx = await storageGet('players_index') || [];
+    const allPreds = [];
+    for (const name of idx) {
+      const data = await storageGet('predictions:' + name);
+      if (data) allPreds.push({ name, predictions: data.predictions || {} });
+    }
+    const scores = allPreds.map(p => ({
+      name: p.name,
+      pts: calcPoints(p.predictions, cfg?.actuals || {}, cfg?.matches || []),
+      data: p,
+    })).sort((a,b) => b.pts - a.pts);
+
     root.innerHTML = '';
     const wrap = el('div', { class:'wrap' });
 
@@ -1410,32 +1426,144 @@ async function renderPlayerApp() {
       el('p', {}, `Hola, ${playerName} 👋`)
     ));
 
-    // Mensaje de cierre del concurso
-    const card = el('div', { class:'card', style:{textAlign:'center',padding:'32px 20px'} });
-    card.appendChild(el('div', { style:{fontSize:'56px',marginBottom:'16px'} }, '🏆'));
-    card.appendChild(el('h2', { style:{fontSize:'20px',fontWeight:900,color:'#7f1d1d',marginBottom:'12px'} },
+    // ── GRACIAS ──────────────────────────────────────────────────────────────
+    const thankCard = el('div', { class:'card', style:{textAlign:'center',padding:'24px 20px 20px'} });
+    thankCard.appendChild(el('div', { style:{fontSize:'48px',marginBottom:'10px'} }, '🎉'));
+    thankCard.appendChild(el('h2', { style:{fontSize:'19px',fontWeight:900,color:'#7f1d1d',marginBottom:'8px'} },
       '¡Gracias por participar!'));
-    card.appendChild(el('p', { style:{fontSize:'14px',color:'var(--text)',marginBottom:'20px',lineHeight:'1.6'} },
-      `${playerName}, fue un Mundial increíble y tus predicciones quedaron registradas. ¡Esperamos que hayas disfrutado el concurso!`));
+    thankCard.appendChild(el('p', { style:{fontSize:'13px',color:'var(--muted)',lineHeight:'1.6'} },
+      `${playerName}, fue un Mundial increíble. ¡Esperamos que hayas disfrutado el concurso!`));
+    wrap.appendChild(thankCard);
 
-    const divider = el('div', { style:{
-      background:'linear-gradient(135deg,#7f1d1d,#b91c1c)',
-      borderRadius:'14px', padding:'20px', marginBottom:'8px'
-    }});
-    divider.appendChild(el('div', { style:{fontSize:'28px',marginBottom:'8px'} }, '📅'));
-    divider.appendChild(el('div', { style:{fontSize:'15px',fontWeight:800,color:'#fff',marginBottom:'4px'} },
-      'Ceremonia de premiación'));
-    divider.appendChild(el('div', { style:{fontSize:'18px',fontWeight:900,color:'#fbbf24'} },
-      'Miércoles 22 de julio'));
-    divider.appendChild(el('div', { style:{fontSize:'14px',color:'rgba(255,255,255,0.85)',marginTop:'4px'} },
-      '15:00 hrs'));
-    card.appendChild(divider);
+    // ── PODIO GENERAL ────────────────────────────────────────────────────────
+    const podioCard = el('div', { class:'card' });
+    podioCard.appendChild(el('h2', {}, '🏆 Podio final'));
 
-    card.appendChild(el('p', { style:{fontSize:'12px',color:'var(--muted)',marginTop:'16px'} },
-      '¡Nos vemos ahí! ⚽🎉'));
-    wrap.appendChild(card);
+    const podio = [
+      { emoji:'🥇', nombre:'Coté',  label:'Primer lugar' },
+      { emoji:'🥈', nombre:'Cony',  label:'Segundo lugar' },
+      { emoji:'🥉', nombre:'Guss',  label:'Tercer lugar' },
+    ];
+    const podioBg = ['#fffbeb','#f8faff','#fff7ed'];
+    const podioBorder = ['#fbbf24','#cbd5e1','#fed7aa'];
 
-    // botón fixture
+    podio.forEach((p, i) => {
+      const row = el('div', { style:{
+        display:'flex', alignItems:'center', gap:'12px',
+        padding:'12px 14px', borderRadius:'12px', marginBottom:'8px',
+        background: podioBg[i], border:`2px solid ${podioBorder[i]}`
+      }});
+      row.appendChild(el('div', { style:{fontSize:'32px',flexShrink:0} }, p.emoji));
+      const info = el('div', { style:{flex:1} });
+      info.appendChild(el('div', { style:{fontSize:'16px',fontWeight:900,color:'#1a2a5e'} }, p.nombre));
+      info.appendChild(el('div', { style:{fontSize:'11px',color:'var(--muted)',fontWeight:600} }, p.label));
+      row.appendChild(info);
+      // puntos desde scores
+      const sc = scores.find(s => s.name.toLowerCase() === p.nombre.toLowerCase());
+      if (sc) {
+        const pts = el('div', { style:{textAlign:'right',flexShrink:0} });
+        pts.appendChild(el('div', { style:{fontSize:'22px',fontWeight:900,color:'#7f1d1d'} }, `${sc.pts}`));
+        pts.appendChild(el('div', { style:{fontSize:'10px',color:'var(--muted)',fontWeight:700} }, 'pts'));
+        row.appendChild(pts);
+      }
+      podioCard.appendChild(row);
+    });
+    wrap.appendChild(podioCard);
+
+    // ── GANADORES POR ETAPA ───────────────────────────────────────────────────
+    const etapaCard = el('div', { class:'card' });
+    etapaCard.appendChild(el('h2', {}, '🥇 Ganadores por etapa'));
+
+    const etapas = [
+      { emoji:'🏟️', label:'Mejor fase de grupos', nombre:'Coté' },
+      { emoji:'⚔️', label:'Mejor 16vos de final',  nombre:'FASAGO' },
+      { emoji:'🔥', label:'Mejor 8vos de final',   nombre:'Dago' },
+    ];
+
+    etapas.forEach((e, i) => {
+      const row = el('div', { style:{
+        display:'flex', alignItems:'center', gap:'12px',
+        padding:'10px 12px', borderRadius:'10px', marginBottom:'6px',
+        background:'var(--bg-light)', border:'1.5px solid var(--border)'
+      }});
+      row.appendChild(el('span', { style:{fontSize:'24px',flexShrink:0} }, e.emoji));
+      const info = el('div', { style:{flex:1} });
+      info.appendChild(el('div', { style:{fontSize:'14px',fontWeight:800,color:'#1a2a5e'} }, e.nombre));
+      info.appendChild(el('div', { style:{fontSize:'11px',color:'var(--muted)'} }, e.label));
+      row.appendChild(info);
+      row.appendChild(el('span', { style:{fontSize:'18px'} }, '🏅'));
+      etapaCard.appendChild(row);
+    });
+    wrap.appendChild(etapaCard);
+
+    // ── PREMIOS ESPECIALES ────────────────────────────────────────────────────
+    const premiosCard = el('div', { class:'card' });
+    premiosCard.appendChild(el('h2', {}, '🎖️ Premios especiales'));
+
+    const premios = [
+      { emoji:'🎯', label:'Reina del marcador exacto', nombre:'Coté',  desc:'Más marcadores exactos' },
+      { emoji:'☑️', label:'Reina del punto',           nombre:'Cony',  desc:'Más resultados correctos' },
+      { emoji:'🏅', label:'Premio a la perseverancia', nombre:'Pato',  desc:'Con el corazón siempre puesto' },
+    ];
+
+    premios.forEach(p => {
+      const row = el('div', { style:{
+        display:'flex', alignItems:'center', gap:'12px',
+        padding:'10px 12px', borderRadius:'10px', marginBottom:'6px',
+        background:'var(--bg-light)', border:'1.5px solid var(--border)'
+      }});
+      row.appendChild(el('span', { style:{fontSize:'24px',flexShrink:0} }, p.emoji));
+      const info = el('div', { style:{flex:1} });
+      info.appendChild(el('div', { style:{fontSize:'14px',fontWeight:800,color:'#1a2a5e'} }, p.nombre));
+      info.appendChild(el('div', { style:{fontSize:'11px',color:'var(--muted)'} }, p.label));
+      info.appendChild(el('div', { style:{fontSize:'10px',color:'var(--muted)',fontStyle:'italic'} }, p.desc));
+      row.appendChild(info);
+      etapaCard.appendChild; // no-op, just to avoid unused warning
+      premiosCard.appendChild(row);
+    });
+    wrap.appendChild(premiosCard);
+
+    // ── TABLA DE POSICIONES FINAL ─────────────────────────────────────────────
+    const tablaCard = el('div', { class:'card' });
+    tablaCard.appendChild(el('h2', {}, '📊 Tabla de posiciones final'));
+    tablaCard.appendChild(el('p', { style:{fontSize:'11px',color:'var(--muted)',marginBottom:'14px'} },
+      '3 pts marcador exacto · 1 pt resultado correcto'));
+
+    const medals2 = ['🥇','🥈','🥉'];
+    scores.forEach((s, i) => {
+      const row = el('div', { class: i===0 ? 'rank-row first' : 'rank-row' });
+      const medal = i < 3 ? medals2[i] : `${i+1}`;
+      row.appendChild(el('div', { class:'rank-medal' }, medal));
+      row.appendChild(el('div', { class:'rank-name' }, s.name));
+      const pts = el('div', { class:'rank-pts' }, `${s.pts}`);
+      pts.appendChild(el('span', {}, 'pts'));
+      row.appendChild(pts);
+      tablaCard.appendChild(row);
+    });
+    wrap.appendChild(tablaCard);
+
+    // ── DETALLE POR JUGADOR ───────────────────────────────────────────────────
+    if (scores.length > 0 && cfg) {
+      const detCard = el('div', { class:'card' });
+      detCard.appendChild(el('h2', {}, '📋 Detalle por jugador'));
+
+      for (const s of scores) {
+        const sec = el('div', { style:{marginBottom:'16px',borderBottom:'1px solid var(--border)',paddingBottom:'14px'} });
+        sec.appendChild(el('div', { style:{fontWeight:800,fontSize:14,color:'var(--text)',marginBottom:'8px'} },
+          `${s.name} — ${s.pts} pts`));
+        cfg.matches.forEach(id => {
+          const match = MATCHES.find(m => m.id === id);
+          if (!match) return;
+          const pred = s.data.predictions[id];
+          const actual = cfg.actuals?.[id];
+          sec.appendChild(makeMatchCard(match, pred, null, actual, null, false, true));
+        });
+        detCard.appendChild(sec);
+      }
+      wrap.appendChild(detCard);
+    }
+
+    // ── FIXTURE ───────────────────────────────────────────────────────────────
     const fixBtn = el('button', { class:'btn btn-ghost', style:{marginBottom:'24px'} }, '🗺️ Ver fixture del Mundial');
     fixBtn.addEventListener('click', () => renderFixturePlayer());
     wrap.appendChild(fixBtn);
@@ -1634,4 +1762,3 @@ init();
 </script>
 </body>
 </html>
- 
